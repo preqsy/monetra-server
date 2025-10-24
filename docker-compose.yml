@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik-qa
+    restart: always
+    command:
+      - --api
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --providers.docker
+      - --providers.docker.exposedbydefault=false
+      - --accesslog
+      - --log
+      - --certificatesresolvers.leresolver.acme.httpchallenge=true
+      - --certificatesresolvers.leresolver.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.leresolver.acme.caserver=https://acme-v02.api.letsencrypt.org/directory
+      - --certificatesresolvers.leresolver.acme.email=dev@aventealabs.com
+      - --certificatesresolvers.leresolver.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - ./letsencrypt:/letsencrypt
+    labels:
+      - traefik.enable=true
+
+      # global redirect to https
+      - "traefik.http.routers.http-catchall.rule=Host(`traefik.finflow.aventealabs.com`)"
+      - "traefik.http.routers.http-catchall.entrypoints=websecure"
+      - "traefik.http.routers.http-catchall.service=api@internal"
+      - "traefik.http.routers.http-catchall.tls=true"
+      - "traefik.http.routers.http-catchall.tls.certresolver=leresolver"
+
+      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+
+      # middleware redirect
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+
+  server:
+    build: .
+    env_file: .env
+    container_name: finflow-api-qa
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.finflow-api-qa.rule=Host(`finflow.api.aventealabs.com`)
+      - traefik.http.routers.finflow-api-qa.entrypoints=websecure
+      - traefik.http.routers.finflow-api-qa.tls.certresolver=leresolver
+      - traefik.http.services.finflow-api-qa.loadbalancer.server.port=8000
+      - traefik.http.routers.finflow-api-qa.tls=true
+
+    ports:
+      - "8000:8000"
+    command: poetry run uvicorn main:app --host 0.0.0.0 --port 8000
+
+  
+  queue:
+    build: .
+    env_file: .env
+    container_name: finflow-queue-qa
+    command: poetry run arq task_queue.main.WorkerSettings
+    restart: always
+    depends_on:
+      - server
+    labels:
+      - traefik.enable=false
+
