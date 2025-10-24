@@ -1,0 +1,88 @@
+{
+    "default_categories":
+    [
+            {"name": "Uncategorized Expense", "type": "expenses"},
+            {"name": "Supermarket", "type": "expenses"},
+            {"name": "Clothing", "type": "expenses"},
+            {"name": "Transport", "type": "expenses"},
+            {"name": "House", "type": "expenses"},
+            {"name": "Enterainment", "type": "expenses"},
+            {"name": "Gifts", "type": "expenses"},
+            {"name": "Travel", "type": "expenses"},
+            {"name": "Education", "type": "expenses"},
+            {"name": "Food", "type": "expenses"},
+            {"name": "Work", "type": "expenses"},
+            {"name": "Electonics", "type": "expenses"},
+            {"name": "Sport", "type": "expenses"},
+            {"name": "Restaurant", "type": "expenses"},
+            {"name": "Health", "type": "expenses"},
+            {"name": "Communications", "type": "expenses"},
+            {"name": "Other", "type": "expenses"},
+            {"name": "Uncategorized Income", "type": "income"},
+            {"name": "Salary", "type": "income"},
+            {"name": "Investment", "type": "income"},
+            {"name": "Rewards", "type": "income"},
+            {"name": "Business", "type": "income"},
+            {"name": "Gifts", "type": "income"},
+            {"name": "Other", "type": "income"}
+        ],
+  "plans": [
+    {
+      "name": "Monthly",
+      "price": 1570,
+      "billing_cycle": "monthly",
+      "description": "1 month subscription with 3-day free trial"
+    },
+    {
+      "name": "Annual",
+      "price": 7900,
+      "billing_cycle": "yearly",
+      "description": "1 year subscription with 3-day free trial"
+    },
+    {
+      "name": "Lifetime",
+      "price": 11500,
+      "billing_cycle": "lifetime",
+      "description": "One-time payment, use forever"
+    }
+  ],
+  "features": [
+    {
+      "name": "AI Chat / Financial Assistant",
+      "description": "Get instant financial help and insights powered by AI"
+    },
+    {
+      "name": "Customization of Categories",
+      "description": "Easily edit and personalize categories to fit your needs"
+    },
+    {
+      "name": "Detailed Analytics",
+      "description": "Gain deep insights into your spending habits with charts and breakdowns"
+    },
+    {
+      "name": "Category Budgets",
+      "description": "Set budgets per category and track progress"
+    },
+    {
+      "name": "No limits for Goals",
+      "description": "Create unlimited financial goals to stay on track"
+    },
+    {
+      "name": "No limits for Accounts",
+      "description": "Add and manage as many accounts as you want"
+    },
+    {
+      "name": "Passcode Protection",
+      "description": "Keep your data secure with an extra layer of protection"
+    },
+    {
+      "name": "Data export",
+      "description": "Export your data anytime for backups or external use"
+    },
+    {
+      "name": "No Ads",
+      "description": "Enjoy the app without any interruptions from ads"
+    }
+  ]
+
+}

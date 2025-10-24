@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "finflow-server"
+version = "0.1.0"
+description = ""
+authors = ["preqsy <obbyprecious24@gmail.com>"]
+readme = "README.md"
+packages = [{include = "api"}, {include = "core"}, {include = "crud"}, {include = "models"}, {include = "schemas"}, {include = "services"}, {include = "task_queue"}, {include = "utils"}]
+
+[tool.poetry.dependencies]
+python = "^3.12.3"
+fastapi = {extras = ["all"], version = "^0.116.1"}
+sqlalchemy = {extras = ["mypy"], version = "^2.0.43"}
+firebase-admin = "^7.1.0"
+psycopg2-binary = "^2.9.10"
+arq = "^0.26.3"
+python-dateutil = "^2.9.0"
+alembic = "^1.16.4"
+mypy = "^1.17.1"
+openai = "^1.108.1"
+langchain = "^0.3.27"
+langchain-openai = "^0.3.33"
+pydantic = "^2.11.9"
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
