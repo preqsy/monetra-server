@@ -8,7 +8,7 @@ from core.externals.firebase.firebase_init import init_firebase
 app = FastAPI()
 
 origins = [
-    "http://localhost:5173",  # if you're using Vite
+    # "http://localhost:5173",  # if you're using Vite
     "http://localhost:8080",  # if another dev port
 ]
 
@@ -45,7 +45,9 @@ async def ensure_cors_header(request, call_next):
         resp = PlainTextResponse(msg, status_code=500)
         try:
             # Use configured origins where possible
-            resp.headers["Access-Control-Allow-Origin"] = ",".join(origins) if origins else "*"
+            resp.headers["Access-Control-Allow-Origin"] = (
+                ",".join(origins) if origins else "*"
+            )
             resp.headers["Access-Control-Allow-Credentials"] = "true"
             resp.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
             resp.headers["Access-Control-Allow-Headers"] = "*"
@@ -54,9 +56,13 @@ async def ensure_cors_header(request, call_next):
         return resp
 
     # If response doesn't already have CORS headers, add them
-    if "access-control-allow-origin" not in {k.lower() for k in response.headers.keys()}:
+    if "access-control-allow-origin" not in {
+        k.lower() for k in response.headers.keys()
+    }:
         try:
-            response.headers["Access-Control-Allow-Origin"] = ",".join(origins) if origins else "*"
+            response.headers["Access-Control-Allow-Origin"] = (
+                ",".join(origins) if origins else "*"
+            )
             response.headers["Access-Control-Allow-Credentials"] = "true"
         except Exception:
             pass
