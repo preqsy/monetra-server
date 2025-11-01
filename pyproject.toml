@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "finflow-server"
+name = "monetra-server"
 version = "0.1.0"
 description = ""
 authors = ["preqsy <obbyprecious24@gmail.com>"]
