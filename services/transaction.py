@@ -68,14 +68,10 @@ class TransactionService:
             user_id=user_id, account_id=data_obj.account_id, is_paid=data_obj.is_paid
         )
 
-        data_obj.amount_in_default = data_obj.amount / user_currency.exchange_rate
-        data_obj.amount_in_default = to_minor_units(
-            amount=data_obj.amount_in_default,
-            currency=user_default_currency.currency.code,
-        )
         data_obj.amount = to_minor_units(
             amount=data_obj.amount, currency=user_currency.currency.code
         )
+        data_obj.amount_in_default = data_obj.amount
 
         data_obj.user_id = user_id
         data_obj.date = (
@@ -88,7 +84,6 @@ class TransactionService:
     async def list_user_transactions(self, user_id: int) -> List[Transaction]:
         transactions = self.crud_transaction.get_user_transactions_by_id(user_id)
         transactions = [convert_sql_models_to_dict(t) for t in transactions]
-
         new_transactions = []
         for trans in transactions:
             selected_currency, _ = await self.get_user_currency(
