@@ -30,7 +30,7 @@ class MonoTransactionTypeEnum(str, Enum):
 
 
 class CategoryTypeEnum(str, Enum):
-    EXPENSE = "expenses"
+    EXPENSE = "expense"
     INCOME = "income"
     GOAL = "goal"
     LIABILITY = "liability"
