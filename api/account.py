@@ -32,7 +32,7 @@ async def list_accounts(
 @router.put("/{account_id}", response_model=AccountResponse)
 async def update_account(
     account_id: int,
-    data_obj: AccountCreate,
+    data_obj: AccountCreate,  # TODO: UPDATE THE SCHEMA
     account_service: AccountService = Depends(get_account_service),
     user: User = Depends(get_current_user),
 ):
