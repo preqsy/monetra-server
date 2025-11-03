@@ -3,6 +3,8 @@ from pydantic import BaseModel
 
 from schemas.base import ReturnBaseModel
 from schemas.enums import BudgetPeriodEnum, BudgetTypeEnum
+from schemas.currency import UserCurrencyResponse
+from schemas.category import CreateCategoryResponse
 
 
 class BudgetCreate(BaseModel):
@@ -22,10 +24,11 @@ class TotalBudgetCreate(BaseModel):
 
 
 class BudgetResponse(ReturnBaseModel, BudgetCreate):
-    pass
+    user_currency: UserCurrencyResponse
+    category: Optional[CreateCategoryResponse] = None
 
 
-class BudgetWithAmountResponse(ReturnBaseModel, BudgetCreate):
+class BudgetWithAmountResponse(BudgetResponse):
     spent_amount: Optional[int] = 0
 
 
