@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, status
+from datetime import date
+from fastapi import APIRouter, Depends, Query, status
 
 from api.dependencies.authorization import get_current_user
 from api.dependencies.service import get_transaction_service
@@ -27,10 +28,13 @@ async def create_transaction(
     response_model=list[TransactionResponse],
 )
 async def get_user_transactions(
+    date: date = Query(
+        date.today(), description="Date to filter the summary by (YYYY-MM-DD)"
+    ),
     transaction_service: TransactionService = Depends(get_transaction_service),
     user: User = Depends(get_current_user),
 ):
-    return await transaction_service.list_user_transactions(user.id)
+    return await transaction_service.list_user_transactions(user.id, date)
 
 
 @router.get(
