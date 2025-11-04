@@ -81,8 +81,10 @@ class TransactionService:
         data_obj.category_id = category.category_id
         return self.crud_transaction.create(data_obj)
 
-    async def list_user_transactions(self, user_id: int) -> List[Transaction]:
-        transactions = self.crud_transaction.get_user_transactions_by_id(user_id)
+    async def list_user_transactions(
+        self, user_id: int, date: date
+    ) -> List[Transaction]:
+        transactions = self.crud_transaction.get_user_transactions_by_id(user_id, date)
         transactions = [convert_sql_models_to_dict(t) for t in transactions]
         new_transactions = []
         for trans in transactions:

@@ -1,17 +1,22 @@
-from datetime import datetime
+from datetime import datetime, date
 from crud.base import CRUDBase
 from models.transaction import Transaction
 from sqlalchemy.orm import joinedload
+from sqlalchemy import extract
 
 from schemas.enums import AccountTypeEnum, TransactionTypeEnum
 
 
 class CRUDTransaction(CRUDBase[Transaction]):
-    def get_user_transactions_by_id(self, user_id: int):
+    def get_user_transactions_by_id(self, user_id: int, date: date):
+        month = date.month
+        year = date.year
         return (
             self.db.query(Transaction)
             .filter(
                 Transaction.user_id == user_id,
+                extract("month", Transaction.created_at) == month,
+                extract("year", Transaction.created_at) == year,
                 Transaction.account.has(is_deleted=False),
             )
             .options(
@@ -19,6 +24,7 @@ class CRUDTransaction(CRUDBase[Transaction]):
                 joinedload(Transaction.user_currency),
                 joinedload(Transaction.account),
             )
+            .order_by(Transaction.id.desc())
             .all()
         )
 
