@@ -60,11 +60,13 @@ def get_account_service(
     crud_account=Depends(get_crud_account),
     crud_currency=Depends(get_crud_currency),
     crud_user_currency=Depends(get_crud_user_currency),
+    transaction_service=Depends(get_transaction_service),
 ) -> AccountService:
     return AccountService(
         crud_account=crud_account,
         crud_currency=crud_currency,
         crud_user_currency=crud_user_currency,
+        transaction_service=transaction_service,
     )
 
 

@@ -43,6 +43,6 @@ async def add_default_accounts(ctx, user_id):
                 if account_type == AccountTypeEnum.DEFAULT_PUBLIC
                 else "Private Account"
             ),
-            amount_base=0,
+            amount_in_default=0,
         )
         crud_account.create(account_obj)
