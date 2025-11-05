@@ -67,6 +67,7 @@ class FullAccountResponse(ReturnBaseModel, AccountBase):
     last_sync_date: Optional[datetime] = None
     user_currency: UserCurrencyResponse
     amount_in_default: Decimal = Decimal(0)
+    account_method: Optional[AccountMethodEnum] = None
 
 
 class AccountWithBalanceResponse(BaseModel):
