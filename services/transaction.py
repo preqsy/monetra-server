@@ -86,20 +86,16 @@ class TransactionService:
     ) -> List[Transaction]:
         transactions = self.crud_transaction.get_user_transactions_by_id(user_id, date)
         transactions = [convert_sql_models_to_dict(t) for t in transactions]
-        new_transactions = []
+
         for trans in transactions:
-            selected_currency, _ = await self.get_user_currency(
-                user_id=user_id, user_currency_id=trans["user_currency_id"]
-            )
+            account_currency = trans["user_currency"]["exchange_rate"]
             amount = Decimal(trans["amount_in_default"])
-            rate = Decimal(str(selected_currency.exchange_rate))
+            rate = Decimal(str(account_currency))
 
             trans["amount_in_default"] = (amount / rate).quantize(
                 Decimal("0.01"), rounding=ROUND_HALF_UP
             )
-
-            new_transactions.append(trans)
-        return new_transactions
+        return transactions
 
     async def delete_transaction(self, transaction_id: int, user_id: int) -> None:
         transaction = self.crud_transaction.get_transaction_by_id(transaction_id)

@@ -20,7 +20,7 @@ class AccountBase(BaseModel):
     account_type: AccountTypeEnum  # AUTOMATIC(MONO), MANUAL
     account_category: AccountCategoryEnum  # CREDIT, BALANCE
     notes: Optional[str] = None
-    amount_base: Optional[int] = 0
+    amount_in_default: Optional[int] = 0
 
 
 class AccountCreate(AccountBase):
@@ -66,6 +66,7 @@ class FullAccountResponse(ReturnBaseModel, AccountBase):
     user_id: int
     last_sync_date: Optional[datetime] = None
     user_currency: UserCurrencyResponse
+    amount_in_default: Decimal = Decimal(0)
 
 
 class AccountWithBalanceResponse(BaseModel):

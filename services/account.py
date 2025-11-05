@@ -1,3 +1,4 @@
+from decimal import ROUND_HALF_UP, Decimal
 from sqlalchemy import Column
 from core.exceptions import MissingResource
 from crud.account import CRUDAccount
@@ -8,7 +9,9 @@ from crud.currency import (
 from models.account import Account
 from schemas.account import AccountCreate
 from schemas.enums import AccountCategoryEnum, AccountTypeEnum
+from services.transaction import TransactionService
 from utils.currency_conversion import to_minor_units
+from utils.helper import convert_sql_models_to_dict, extract_beneficiary
 
 
 class AccountService:
@@ -17,10 +20,12 @@ class AccountService:
         crud_account: CRUDAccount,
         crud_user_currency: CRUDUserCurrency,
         crud_currency: CRUDCurrency,
+        transaction_service: TransactionService,
     ):
         self.crud_account = crud_account
         self.crud_user_currency = crud_user_currency
         self.crud_currency = crud_currency
+        self.transaction_service = transaction_service
 
     async def create_account(
         self,
@@ -40,7 +45,8 @@ class AccountService:
         if not currency:
             currency = self.crud_user_currency.get_user_default_currency(user_id)
         data_obj.user_currency_id = currency.id
-        data_obj.amount_base = to_minor_units(data_obj.amount, currency.currency.code)
+        data_obj.amount = to_minor_units(data_obj.amount, currency.currency.code)
+        data_obj.amount_in_default = data_obj.amount
         data_obj.user_id = user_id
         data_obj.account_type = AccountTypeEnum.MANUAL
         return self.crud_account.create(data_obj.model_dump())
@@ -66,7 +72,9 @@ class AccountService:
         if not currency:
             raise MissingResource(message="User currency not found")
 
-        data_obj.amount_base = to_minor_units(data_obj.amount, currency.currency.code)
+        data_obj.amount_in_default = to_minor_units(
+            data_obj.amount, currency.currency.code
+        )
         return self.crud_account.update(id=account_id, data_obj=data_obj)
 
     async def delete_account(self, account_id: int, user_id: int) -> Account:
@@ -81,22 +89,18 @@ class AccountService:
 
     async def list_accounts(self, user_id: int):
         accounts = self.crud_account.get_public_accounts(user_id=user_id)
+        currencies = [f.user_currency.exchange_rate for f in accounts]
+        print("***********Currencies:", currencies)
+        accounts = [convert_sql_models_to_dict(account) for account in accounts]
 
-        user_currencies = self.crud_user_currency.get_user_currencies(user_id)
-        if not user_currencies:
-            raise MissingResource(message="Default currency not found")
-        default_currency = max(user_currencies, key=lambda x: x.is_default)
-        total_amount = []
-        for currency in user_currencies:
-            for account in accounts:
-                if account.user_currency_id == currency.id:
-                    total_amount.append(
-                        account.amount  # Let's say this is 1500 Naira
-                        * default_currency.exchange_rate  # Default rate is one...
-                        / currency.exchange_rate  # Exchange rate is 0.007
-                    )
-        total_amount = sum(total_amount)
-        return {
-            "total_balance": total_amount,
-            "accounts": accounts,
-        }
+        for account in accounts:
+            exchange_rate = Decimal(account["user_currency"]["exchange_rate"])
+            amount = Decimal(account["amount"])
+            account["amount_in_default"] = (amount / exchange_rate).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
+        total_balance = sum(
+            Decimal(account["amount_in_default"]) for account in accounts
+        )
+
+        return {"total_balance": total_balance, "accounts": accounts}

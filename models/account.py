@@ -24,7 +24,7 @@ class Account(Base):
         ForeignKey("users_currencies.id", onupdate="CASCADE"), nullable=False
     )
     amount = Column(BigInteger, nullable=False, default=0)  # Original Amount
-    amount_base = Column(
+    amount_in_default = Column(
         BigInteger, nullable=False, default=0
     )  # Amount in base currency
     account_type = Column(String, nullable=False)  # AUTOMATIC(MONO), MANUAL

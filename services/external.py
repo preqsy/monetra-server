@@ -80,7 +80,7 @@ class ExternalService:
             name=account.account.institution.name or "Account",
             user_currency_id=user_currency.id,
             amount=amount,
-            amount_base=account.account.balance,
+            amount_in_default=account.account.balance,
             account_number=account.account.account_number,
             ext_account_id=account.account.id,
         )
