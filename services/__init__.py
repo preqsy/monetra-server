@@ -8,5 +8,4 @@ from .transaction import TransactionService
 from .subscription import SubscriptionService
 from .rules import TransactionRuleService
 from .summary import AccountSummaryService
-from .llm_agent import LLMAgentService
 from .budget import BudgetService
