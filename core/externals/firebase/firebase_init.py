@@ -16,7 +16,12 @@ def init_firebase():
     ):
         cred = credentials.Certificate(settings.FIREBASE_ADMIN_SDK_JSON_PATH)
         print("Initializing Firebase with provided service account JSON.")
-        return firebase_admin.initialize_app(cred)
+        return firebase_admin.initialize_app(
+            cred,
+            {
+                "projectId": "montera-a9760",
+            },
+        )
     else:
         print("Initializing Firebase with default credentials.")
         return firebase_admin.initialize_app()
