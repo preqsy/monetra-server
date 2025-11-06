@@ -9,7 +9,8 @@ app = FastAPI()
 
 origins = [
     # "http://localhost:5173",  # if you're using Vite
-    "http://localhost:8080",  # if another dev port
+    # "http://localhost:8080",  # if another dev port
+    "*"
 ]
 
 app.add_middleware(
