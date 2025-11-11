@@ -18,9 +18,7 @@ def init_firebase():
     if firebase_admin._apps:
         return firebase_admin.get_app()
 
-    if settings.FIREBASE_ADMIN_SDK_JSON_PATH and os.path.exists(
-        settings.FIREBASE_ADMIN_SDK_JSON_PATH
-    ):
+    if firebase_json:
         cred = credentials.Certificate(firebase_json)
         print("Initializing Firebase with provided service account JSON.")
         return firebase_admin.initialize_app(
