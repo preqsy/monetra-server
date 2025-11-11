@@ -23,5 +23,9 @@ def init_firebase():
             },
         )
     else:
-        print("Initializing Firebase with default credentials.")
-        return firebase_admin.initialize_app()
+        print("Initializing Firebase with default credentials and explicit projectId.")
+        return firebase_admin.initialize_app(
+            options={
+                "projectId": "montera-a9760",
+            }
+        )
