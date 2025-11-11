@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     MONO_BASE_URL: str = "https://api.withmono.com/v2"
     MONO_SECRET_KEY: str = ""
     FIREBASE_ADMIN_SDK_JSON_PATH: str = ""
+    FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
