@@ -98,8 +98,10 @@ class TransactionService:
         return transactions
 
     async def delete_transaction(self, transaction_id: int, user_id: int) -> None:
-        transaction = self.crud_transaction.get_transaction_by_id(transaction_id)
-        if transaction and transaction.user_id == user_id:
+        transaction = self.crud_transaction.get_transaction_by_id(
+            transaction_id, user_id
+        )
+        if transaction:
             return self.crud_transaction.delete(transaction_id)
         raise MissingResource(message="Transaction not found or access denied.")
 
@@ -118,9 +120,18 @@ class TransactionService:
     async def get_single_transaction(
         self, transaction_id: int, user_id: int
     ) -> Transaction:
-        transaction = self.crud_transaction.get_transaction_by_id(transaction_id)
-        if not transaction or transaction.user_id != user_id:
+        transaction = self.crud_transaction.get_transaction_by_id(
+            transaction_id, user_id
+        )
+        if not transaction:
             raise MissingResource(message="Transaction not found or access denied.")
+        transaction = convert_sql_models_to_dict(transaction)
+        account_currency = transaction["user_currency"]["exchange_rate"]
+        amount = Decimal(transaction["amount_in_default"])
+        rate = Decimal(str(account_currency))
+        transaction["amount_in_default"] = (amount / rate).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
         return transaction
 
     async def get_user_currency(

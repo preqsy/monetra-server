@@ -28,11 +28,12 @@ class CRUDTransaction(CRUDBase[Transaction]):
             .all()
         )
 
-    def get_transaction_by_id(self, transaction_id: int):
+    def get_transaction_by_id(self, transaction_id: int, user_id: int):
         return (
             self.db.query(Transaction)
             .filter(
                 Transaction.id == transaction_id,
+                Transaction.user_id == user_id,
                 Transaction.account.has(is_deleted=False),
             )
             .options(
