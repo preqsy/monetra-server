@@ -39,13 +39,14 @@ class AccountService:
         if data_obj.credit_amount < 0:
             data_obj.credit_amount = 0
 
-        currency = self.crud_user_currency.get_user_currency(
+        # Check user currency
+        user_currency = self.crud_user_currency.get_user_currency(
             user_id, data_obj.user_currency_id
         )
-        if not currency:
-            currency = self.crud_user_currency.get_user_default_currency(user_id)
-        data_obj.user_currency_id = currency.id
-        data_obj.amount = to_minor_units(data_obj.amount, currency.currency.code)
+        if not user_currency:
+            user_currency = self.crud_user_currency.get_user_default_currency(user_id)
+        data_obj.user_currency_id = user_currency.id
+        data_obj.amount = to_minor_units(data_obj.amount, user_currency.currency.code)
         data_obj.amount_in_default = data_obj.amount
         data_obj.user_id = user_id
         data_obj.account_type = AccountTypeEnum.MANUAL
@@ -66,15 +67,13 @@ class AccountService:
         if data_obj.credit_amount < 0:
             data_obj.credit_amount = 0
 
-        currency = self.crud_user_currency.get_user_currency(
+        user_currency = self.crud_user_currency.get_user_currency(
             user_id, data_obj.user_currency_id
         )
-        if not currency:
+        if not user_currency:
             raise MissingResource(message="User currency not found")
 
-        data_obj.amount_in_default = to_minor_units(
-            data_obj.amount, currency.currency.code
-        )
+        data_obj.amount = to_minor_units(data_obj.amount, user_currency.currency.code)
         return self.crud_account.update(id=account_id, data_obj=data_obj)
 
     async def delete_account(self, account_id: int, user_id: int) -> Account:
@@ -90,7 +89,7 @@ class AccountService:
     async def list_accounts(self, user_id: int):
         accounts = self.crud_account.get_public_accounts(user_id=user_id)
         currencies = [f.user_currency.exchange_rate for f in accounts]
-        print("***********Currencies:", currencies)
+        # print("***********Currencies:", currencies)
         accounts = [convert_sql_models_to_dict(account) for account in accounts]
 
         for account in accounts:

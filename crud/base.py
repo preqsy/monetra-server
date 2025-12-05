@@ -44,7 +44,7 @@ class CRUDBase(Generic[ModelType]):
     def _get_query_by_id(self, id: int):
         return self.db.query(self.model).filter(self.model.id == id)
 
-    def update(self, id: int, data_obj: dict):
+    def update(self, id: int, data_obj: dict) -> ModelType | None:
         if isinstance(data_obj, BaseModel):
             data_obj = data_obj.model_dump(exclude_unset=True)
 
