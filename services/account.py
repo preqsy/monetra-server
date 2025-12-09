@@ -88,8 +88,6 @@ class AccountService:
 
     async def list_accounts(self, user_id: int):
         accounts = self.crud_account.get_public_accounts(user_id=user_id)
-        currencies = [f.user_currency.exchange_rate for f in accounts]
-        # print("***********Currencies:", currencies)
         accounts = [convert_sql_models_to_dict(account) for account in accounts]
 
         for account in accounts:
