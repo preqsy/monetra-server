@@ -14,7 +14,7 @@ def get_default_categories():
     return read_from_config_json("default_categories")
 
 
-def convert_sql_models_to_dict(obj, visited=None):
+def convert_sql_models_to_dict(obj, visited=None) -> dict:
     """Convert a SQLAlchemy model instance to a dictionary, including relationships."""
     if visited is None:
         visited = set()

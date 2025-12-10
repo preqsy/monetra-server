@@ -38,7 +38,7 @@ class CRUDAccount(CRUDBase[Account]):
             .all()
         )
 
-    def get_account_by_id(self, account_id: str, user_id: int) -> Optional[Account]:
+    def get_account_by_id(self, account_id: int, user_id: int) -> Optional[Account]:
         return (
             self.db.query(Account)
             .filter(
