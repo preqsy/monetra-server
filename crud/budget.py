@@ -1,9 +1,11 @@
 from typing import Optional
 from sqlalchemy.orm import joinedload
 
+from core.db import get_db
 from crud.base import CRUDBase
 from models.budget import Budget
 
+from models.currency import UserCurrency
 from schemas.enums import BudgetPeriodEnum, BudgetTypeEnum
 
 
@@ -24,7 +26,8 @@ class CRUDBudget(CRUDBase[Budget]):
             query = query.filter(Budget.type == type)
             return query.one_or_none()
         return query.options(
-            joinedload(Budget.user_currency), joinedload(Budget.category)
+            joinedload(Budget.user_currency).joinedload(UserCurrency.currency),
+            joinedload(Budget.category),
         ).all()
 
     def get_total_budget(self, user_id: int, period: BudgetPeriodEnum) -> list[Budget]:
@@ -38,5 +41,8 @@ class CRUDBudget(CRUDBase[Budget]):
         )
 
 
+db_session = next(get_db())
+
+
 def get_crud_budget() -> CRUDBudget:
-    return CRUDBudget(model=Budget)
+    return CRUDBudget(model=Budget, db=db_session)

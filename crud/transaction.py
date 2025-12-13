@@ -1,5 +1,7 @@
 from datetime import datetime, date
+from core.db import get_db
 from crud.base import CRUDBase
+from models.currency import UserCurrency
 from models.transaction import Transaction
 from sqlalchemy.orm import joinedload
 from sqlalchemy import extract
@@ -22,7 +24,7 @@ class CRUDTransaction(CRUDBase[Transaction]):
             )
             .options(
                 joinedload(Transaction.category),
-                joinedload(Transaction.user_currency),
+                joinedload(Transaction.user_currency).joinedload(UserCurrency.currency),
                 joinedload(Transaction.account),
             )
             .order_by(Transaction.id.desc())
@@ -39,7 +41,9 @@ class CRUDTransaction(CRUDBase[Transaction]):
             )
             .options(
                 joinedload(Transaction.category),
-                joinedload(Transaction.user_currency, innerjoin=True),
+                joinedload(Transaction.user_currency, innerjoin=True).joinedload(
+                    UserCurrency.currency
+                ),
                 joinedload(Transaction.account),
             )
             .first()
@@ -55,7 +59,9 @@ class CRUDTransaction(CRUDBase[Transaction]):
             )
             .options(
                 joinedload(Transaction.category),
-                joinedload(Transaction.user_currency, innerjoin=True),
+                joinedload(Transaction.user_currency, innerjoin=True).joinedload(
+                    UserCurrency.currency
+                ),
                 joinedload(Transaction.account),
             )
             .all()
@@ -71,7 +77,9 @@ class CRUDTransaction(CRUDBase[Transaction]):
             )
             .options(
                 joinedload(Transaction.category),
-                joinedload(Transaction.user_currency, innerjoin=True),
+                joinedload(Transaction.user_currency, innerjoin=True).joinedload(
+                    UserCurrency.currency
+                ),
                 joinedload(Transaction.account),
             )
             .all()
@@ -87,7 +95,9 @@ class CRUDTransaction(CRUDBase[Transaction]):
             )
             .options(
                 joinedload(Transaction.category),
-                joinedload(Transaction.user_currency, innerjoin=True),
+                joinedload(Transaction.user_currency, innerjoin=True).joinedload(
+                    UserCurrency.currency
+                ),
                 joinedload(Transaction.account),
             )
         )
@@ -127,12 +137,17 @@ class CRUDTransaction(CRUDBase[Transaction]):
             )
             .options(
                 joinedload(Transaction.category),
-                joinedload(Transaction.user_currency, innerjoin=True),
+                joinedload(Transaction.user_currency, innerjoin=True).joinedload(
+                    UserCurrency.currency
+                ),
                 joinedload(Transaction.account),
             )
         )
         return query.all()
 
 
+db_session = next(get_db())
+
+
 def get_crud_transaction() -> CRUDTransaction:
-    return CRUDTransaction(model=Transaction)
+    return CRUDTransaction(model=Transaction, db=db_session)

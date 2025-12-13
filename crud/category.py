@@ -1,5 +1,6 @@
 from sqlalchemy.orm import joinedload
 
+from core.db import get_db
 from crud.base import CRUDBase
 from models.category import Category, UserCategory
 from schemas.category import DefaultCategoryCreate
@@ -71,6 +72,8 @@ class CRUDUserCategory(CRUDBase[UserCategory]):
         )
 
 
+db_session = next(get_db())
+
 crud_category = CRUDCategory(Category)
 
 
@@ -79,4 +82,4 @@ def get_crud_category():
 
 
 def get_crud_user_category():
-    return CRUDUserCategory(UserCategory)
+    return CRUDUserCategory(model=UserCategory, db=db_session)

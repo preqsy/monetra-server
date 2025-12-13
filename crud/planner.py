@@ -1,6 +1,8 @@
 from sqlalchemy import Column
 from sqlalchemy.orm import joinedload
+from core.db import get_db
 from crud.base import CRUDBase
+from models.currency import UserCurrency
 from models.planner import Planner
 
 
@@ -10,7 +12,8 @@ class CRUDPlanner(CRUDBase[Planner]):
             self.db.query(self.model)
             .filter(self.model.user_id == user_id)
             .options(
-                joinedload(self.model.category), joinedload(self.model.user_currency)
+                joinedload(self.model.category),
+                joinedload(self.model.user_currency).joinedload(UserCurrency.currency),
             )
             .all()
         )
@@ -19,10 +22,16 @@ class CRUDPlanner(CRUDBase[Planner]):
         return (
             self.db.query(self.model)
             .filter(self.model.id == id)
-            .options(joinedload(Planner.category), joinedload(Planner.user_currency))
+            .options(
+                joinedload(Planner.category),
+                joinedload(Planner.user_currency).joinedload(UserCurrency.currency),
+            )
             .first()
         )
 
 
+db_session = next(get_db())
+
+
 def get_crud_planner():
-    return CRUDPlanner(Planner)
+    return CRUDPlanner(model=Planner, db=db_session)
