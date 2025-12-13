@@ -145,9 +145,11 @@ async def get_subscription_service(
 
 def get_account_summary_service(
     crud_total_summary=Depends(get_crud_total_summary),
+    crud_account=Depends(get_crud_account),
 ) -> AccountSummaryService:
     return AccountSummaryService(
         crud_total_summary=crud_total_summary,
+        crud_account=crud_account,
     )
 
 

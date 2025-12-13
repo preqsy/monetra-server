@@ -1,4 +1,5 @@
 from typing import List, Optional
+from core.db import get_db
 from crud.base import CRUDBase
 from models.currency import Currency, UserCurrency
 from sqlalchemy.orm import joinedload
@@ -70,9 +71,12 @@ class CRUDUserCurrency(CRUDBase[UserCurrency]):
         return data_obj.model_dump()
 
 
+db_session = next(get_db())
+
+
 def get_crud_currency():
-    return CRUDCurrency(model=Currency)
+    return CRUDCurrency(model=Currency, db=db_session)
 
 
 def get_crud_user_currency():
-    return CRUDUserCurrency(model=UserCurrency)
+    return CRUDUserCurrency(model=UserCurrency, db=db_session)

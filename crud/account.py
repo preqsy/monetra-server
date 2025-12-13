@@ -1,4 +1,5 @@
 from typing import Optional
+from core.db import get_db
 from crud.base import CRUDBase
 from models.account import Account
 from schemas.enums import AccountTypeEnum
@@ -73,5 +74,11 @@ class CRUDAccount(CRUDBase[Account]):
         )
 
 
+db_session = next(get_db())
+
+
 def get_crud_account() -> CRUDAccount:
-    return CRUDAccount(model=Account)
+    return CRUDAccount(
+        model=Account,
+        db=db_session,
+    )

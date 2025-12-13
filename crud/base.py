@@ -9,7 +9,11 @@ ModelType = TypeVar("ModelType", bound=Base)
 
 
 class CRUDBase(Generic[ModelType]):
-    def __init__(self, model: Type[ModelType], db: Session = next(get_db())):
+    def __init__(
+        self,
+        model: Type[ModelType],
+        db: Session = next(get_db()),
+    ):
         self.db = db
         self.model = model
 
