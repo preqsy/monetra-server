@@ -59,7 +59,7 @@ class TransactionService:
             and data_obj.transaction_type == TransactionTypeEnum.EXPENSE
         ):
             data_obj.amount = abs(data_obj.amount)
-        user_currency, user_default_currency = await self.get_user_currency(
+        user_currency, _ = await self.get_user_currency(
             user_id, data_obj.user_currency_id
         )
         data_obj.user_currency_id = user_currency.id

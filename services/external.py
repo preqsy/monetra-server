@@ -108,7 +108,9 @@ class ExternalService:
         exchange_result = await self.plaid_client.exchange_public_token(public_token)
         access_token = exchange_result.access_token
 
-        plaid_accounts_response = await self.plaid_client.get_accounts(access_token)
+        plaid_accounts_response = await self.plaid_client.get_plaid_user_accounts(
+            access_token
+        )
 
         created_accounts = self.create_plaid_accounts_from_response(
             plaid_accounts_response, access_token, user_id

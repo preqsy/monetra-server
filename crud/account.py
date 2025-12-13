@@ -8,6 +8,13 @@ from sqlalchemy.orm import joinedload
 
 
 class CRUDAccount(CRUDBase[Account]):
+
+    def _get_account_query_by_user_id(self, user_id: int):
+        return self.db.query(Account).filter(
+            Account.user_id == user_id,
+            Account.is_deleted == False,
+        )
+
     def get_by_account_number(self, account_number: str) -> Optional[Account]:
         return (
             self.db.query(Account)
@@ -19,23 +26,12 @@ class CRUDAccount(CRUDBase[Account]):
         )
 
     def get_accounts(self, user_id: int) -> list[Account]:
-        return (
-            self.db.query(Account)
-            .filter(
-                Account.user_id == user_id,
-                Account.is_deleted == False,
-            )
-            .all()
-        )
+        return self._get_account_query_by_user_id(user_id).all()
 
     def get_public_accounts(self, user_id: int) -> list[Account]:
         return (
-            self.db.query(Account)
-            .filter(
-                Account.user_id == user_id,
-                Account.account_type != AccountTypeEnum.DEFAULT_PRIVATE,
-                Account.is_deleted == False,
-            )
+            self._get_account_query_by_user_id(user_id)
+            .filter(Account.account_type != AccountTypeEnum.DEFAULT_PRIVATE)
             .options(
                 joinedload(Account.user_currency).joinedload(UserCurrency.currency)
             )
@@ -44,33 +40,18 @@ class CRUDAccount(CRUDBase[Account]):
 
     def get_account_by_id(self, account_id: int, user_id: int) -> Optional[Account]:
         return (
-            self.db.query(Account)
+            self._get_account_query_by_user_id(user_id)
             .filter(
                 Account.id == account_id,
-                Account.user_id == user_id,
                 Account.account_type != AccountTypeEnum.DEFAULT_PRIVATE,
-                Account.is_deleted == False,
-            )
-            .first()
-        )
-
-    def get_user_default_public_account(self, user_id: str) -> Optional[Account]:
-        return (
-            self.db.query(Account)
-            .filter(
-                Account.user_id == user_id,
-                Account.account_type == AccountTypeEnum.DEFAULT_PUBLIC,
-                Account.is_deleted == False,
             )
             .first()
         )
 
     def get_automatic_accounts(self, user_id: int) -> list[Account]:
         return (
-            self.db.query(Account)
+            self._get_account_query_by_user_id(user_id)
             .filter(
-                Account.user_id == user_id,
-                Account.is_deleted == False,
                 Account.account_type == AccountTypeEnum.AUTOMATIC,
             )
             .all()
