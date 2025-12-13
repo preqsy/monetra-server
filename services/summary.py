@@ -1,20 +1,19 @@
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
-from pprint import pprint
-from crud.account import CRUDAccount
 from crud.summary import CRUDTotalSummary
-from utils.helper import convert_sql_models_to_dict
-import time
+from services.account import AccountService
+from services.transaction import TransactionService
 
 
 class AccountSummaryService:
     def __init__(
         self,
         crud_total_summary: CRUDTotalSummary,
-        crud_account: CRUDAccount,
+        account_service: AccountService,
+        transaction_service: TransactionService,
     ):
         self.crud_total_summary = crud_total_summary
-        self.crud_account = crud_account
+        self.account_service = account_service
+        self.transaction_service = transaction_service
 
     async def get_account_summary(self, user_id: int, date: date):
         print(
@@ -35,22 +34,16 @@ class AccountSummaryService:
                 "year": date.year,
             }
         # summary = await self.calculate_account_balance(user_id=user_id)
+
+        net_total = await self.get_total_income_and_expenses(user_id=user_id)
+
+        print(f"Summary fetched: {net_total}")
         return summary
 
-    async def calculate_account_balance(self, user_id: int):
-        accounts = self.crud_account.get_public_accounts(user_id=user_id)
+    async def get_account_balance(self, user_id: int):
+        return await self.account_service.calculate_account_balance(user_id=user_id)
 
-        accounts = [convert_sql_models_to_dict(account) for account in accounts]
-        total_balance = Decimal(0)
-
-        for account in accounts:
-            exchange_rate = Decimal(account["user_currency"]["exchange_rate"])
-            amount = Decimal(account["amount"])
-            account["amount_in_default"] = (amount / exchange_rate).quantize(
-                Decimal("0.01"), rounding=ROUND_HALF_UP
-            )
-            total_balance += account["amount_in_default"]
-
-        return total_balance
-
-    async def get_total_income_and_expenses(self, user_id: int): ...
+    async def get_total_income_and_expenses(self, user_id: int):
+        return await self.transaction_service.calculate_total_income_and_expenses(
+            user_id=user_id
+        )

@@ -105,7 +105,7 @@ class TransactionService:
             return self.crud_transaction.delete(transaction_id)
         raise MissingResource(message="Transaction not found or access denied.")
 
-    async def get_account_transactions(
+    async def get_one_account_transactions(
         self, account_id: int, user_id: int
     ) -> List[Transaction]:
         account = self.crud_account.get_account_by_id(
@@ -133,6 +133,41 @@ class TransactionService:
             Decimal("0.01"), rounding=ROUND_HALF_UP
         )
         return transaction
+
+    async def calculate_total_income_and_expenses(
+        self, user_id: int
+    ) -> Dict[str, Decimal]:
+        transactions = self.crud_transaction.get_all_transactions_by_user_id(
+            user_id=user_id
+        )
+        transactions = [convert_sql_models_to_dict(t) for t in transactions]
+
+        for trans in transactions:
+            transaction_currency_exchange_rate = trans["user_currency"]["exchange_rate"]
+            amount = Decimal(trans["amount_in_default"])
+            rate = Decimal(str(transaction_currency_exchange_rate))
+            trans["amount_in_default"] = (amount / rate).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
+
+        income = sum(
+            [
+                Decimal(trans["amount_in_default"])
+                for trans in transactions
+                if trans["transaction_type"] == "income"
+            ]
+        )
+        expense = sum(
+            [
+                Decimal(trans["amount_in_default"])
+                for trans in transactions
+                if trans["transaction_type"] == "expense"
+            ]
+        )
+        return {
+            "total_income": income or Decimal(0),
+            "total_expense": expense or Decimal(0),
+        }
 
     async def get_user_currency(
         self, user_id: int, user_currency_id: int | None

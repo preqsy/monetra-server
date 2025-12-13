@@ -38,6 +38,9 @@ class CRUDTransaction(CRUDBase[Transaction]):
             .all()
         )
 
+    def get_all_transactions_by_user_id(self, user_id: int):
+        return self._get_transaction_query_by_user_id(user_id).all()
+
     def get_transaction_by_id(self, transaction_id: int, user_id: int):
         return (
             self._get_transaction_query_by_user_id(user_id)

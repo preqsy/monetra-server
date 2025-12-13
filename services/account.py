@@ -90,14 +90,22 @@ class AccountService:
         accounts = self.crud_account.get_public_accounts(user_id=user_id)
         accounts = [convert_sql_models_to_dict(account) for account in accounts]
 
+        total_balance = await self.calculate_account_balance(user_id=user_id)
+
+        return {"total_balance": total_balance, "accounts": accounts}
+
+    async def calculate_account_balance(self, user_id: int):
+        accounts = self.crud_account.get_public_accounts(user_id=user_id)
+
+        accounts = [convert_sql_models_to_dict(account) for account in accounts]
+        total_balance = Decimal(0)
+
         for account in accounts:
             exchange_rate = Decimal(account["user_currency"]["exchange_rate"])
             amount = Decimal(account["amount"])
             account["amount_in_default"] = (amount / exchange_rate).quantize(
                 Decimal("0.01"), rounding=ROUND_HALF_UP
             )
-        total_balance = sum(
-            Decimal(account["amount_in_default"]) for account in accounts
-        )
+            total_balance += account["amount_in_default"]
 
-        return {"total_balance": total_balance, "accounts": accounts}
+        return total_balance
