@@ -19,47 +19,34 @@ class CRUDCurrency(CRUDBase):
 
 
 class CRUDUserCurrency(CRUDBase[UserCurrency]):
-    # TODO: Add a relationship to the currency table here
-    def get_user_currencies(self, user_id: int):
+    def _get_user_currency_query_by_user_id(self, user_id: int):
         return (
             self.db.query(UserCurrency)
-            .filter(
-                UserCurrency.user_id == user_id,
-            )
+            .filter(UserCurrency.user_id == user_id)
             .options(joinedload(UserCurrency.currency))
-            .all()
         )
+
+    def get_user_currencies(self, user_id: int):
+        return self._get_user_currency_query_by_user_id(user_id).all()
 
     def get_user_currency(self, user_id: int, user_currency_id: int):
         return (
-            self.db.query(UserCurrency)
-            .filter(
-                UserCurrency.user_id == user_id,
-                UserCurrency.id == user_currency_id,
-            )
-            .options(joinedload(UserCurrency.currency))
+            self._get_user_currency_query_by_user_id(user_id)
+            .filter(UserCurrency.id == user_currency_id)
             .first()
         )
 
-    def get_user_currency_by_currency(self, user_id: int, currency_id: int):
+    def get_user_currency_by_currency_id(self, user_id: int, currency_id: int):
         return (
-            self.db.query(UserCurrency)
-            .filter(
-                UserCurrency.user_id == user_id,
-                UserCurrency.currency_id == currency_id,
-            )
-            .options(joinedload(UserCurrency.currency))
+            self._get_user_currency_query_by_user_id(user_id)
+            .filter(UserCurrency.currency_id == currency_id)
             .first()
         )
 
     def get_user_default_currency(self, user_id: int):
         return (
-            self.db.query(UserCurrency)
-            .filter(
-                UserCurrency.user_id == user_id,
-                UserCurrency.is_default == True,
-            )
-            .options(joinedload(UserCurrency.currency))
+            self._get_user_currency_query_by_user_id(user_id)
+            .filter(UserCurrency.is_default == True)
             .first()
         )
 

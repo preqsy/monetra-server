@@ -24,7 +24,7 @@ class CurrencyService:
 
         if not currency:
             raise MissingResource(message="Currency not found")
-        if self.crud_user_currency.get_user_currency_by_currency(
+        if self.crud_user_currency.get_user_currency_by_currency_id(
             user_id, data_obj.currency_id
         ):
             raise MissingResource(message="Currency already added")

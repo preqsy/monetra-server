@@ -147,7 +147,7 @@ class ExternalService:
                 continue
             currency_check = self.crud_currency.get_currency_by_code(currency)
 
-            user_currency = self.crud_user_currency.get_user_currency_by_currency(
+            user_currency = self.crud_user_currency.get_user_currency_by_currency_id(
                 user_id, currency_check.id
             )
 
