@@ -35,38 +35,39 @@ class CRUDCategory(CRUDBase[Category]):
 
 
 class CRUDUserCategory(CRUDBase[UserCategory]):
+
+    def _get_category_query_by_user_id(self, user_id: int):
+        return self.db.query(UserCategory).filter(UserCategory.user_id == user_id)
+
     def check_user_category_name_exists(self, user_id: int, name: str) -> bool:
         return (
-            self.db.query(UserCategory)
-            .filter(
-                UserCategory.user_id == user_id, UserCategory.category.has(name=name)
-            )
+            self._get_category_query_by_user_id(user_id)
+            .filter(UserCategory.category.has(name=name))
             .first()
             is not None
         )
 
     def get_user_categories(self, user_id: int) -> list[UserCategory]:
         return (
-            self.db.query(UserCategory)
-            .filter(UserCategory.user_id == user_id)
+            self._get_category_query_by_user_id(user_id)
             .options(joinedload(UserCategory.category))
             .all()
         )
 
-    def get_user_category(self, user_id: int, id: int) -> UserCategory | None:
+    def get_user_category_by_id(
+        self, user_id: int, category_id: int
+    ) -> UserCategory | None:
         return (
-            self.db.query(UserCategory)
-            .filter(UserCategory.user_id == user_id, UserCategory.id == id)
+            self._get_category_query_by_user_id(user_id)
+            .filter(UserCategory.id == category_id)
             .options(joinedload(UserCategory.category))
             .first()
         )
 
     def get_user_category_by_category_id(self, user_id: int, category_id: int):
         return (
-            self.db.query(UserCategory)
-            .filter(
-                UserCategory.user_id == user_id, UserCategory.category_id == category_id
-            )
+            self._get_category_query_by_user_id(user_id)
+            .filter(UserCategory.category_id == category_id)
             .options(joinedload(UserCategory.category))
             .first()
         )
