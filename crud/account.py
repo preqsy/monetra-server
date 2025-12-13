@@ -2,6 +2,7 @@ from typing import Optional
 from core.db import get_db
 from crud.base import CRUDBase
 from models.account import Account
+from models.currency import UserCurrency
 from schemas.enums import AccountTypeEnum
 from sqlalchemy.orm import joinedload
 
@@ -35,7 +36,9 @@ class CRUDAccount(CRUDBase[Account]):
                 Account.account_type != AccountTypeEnum.DEFAULT_PRIVATE,
                 Account.is_deleted == False,
             )
-            .options(joinedload(Account.user_currency))
+            .options(
+                joinedload(Account.user_currency).joinedload(UserCurrency.currency)
+            )
             .all()
         )
 
