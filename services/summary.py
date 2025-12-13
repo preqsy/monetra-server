@@ -52,3 +52,5 @@ class AccountSummaryService:
             total_balance += account["amount_in_default"]
 
         return total_balance
+
+    async def get_total_income_and_expenses(self, user_id: int): ...

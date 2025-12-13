@@ -16,7 +16,7 @@ class CRUDBudget(CRUDBase[Budget]):
         user_id: int,
         period: BudgetPeriodEnum,
         type: Optional[BudgetTypeEnum] = None,
-    ) -> list[Budget] | Optional[Budget]:
+    ) -> Optional[list[Budget]]:
         query = self.db.query(Budget).filter(
             Budget.user_id == user_id, Budget.period == period
         )

@@ -8,6 +8,7 @@ from schemas.enums import AccountTypeEnum, TransactionTypeEnum
 
 
 class CRUDTransaction(CRUDBase[Transaction]):
+
     def get_user_transactions_by_id(self, user_id: int, date: date):
         month = date.month
         year = date.year

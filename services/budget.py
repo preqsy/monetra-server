@@ -41,9 +41,15 @@ class BudgetService:
     ):
         budgets = self.crud_budget.get_budget_by_period(user_id=user_id, period=period)
 
+        if not budgets:
+            return []
+
         transaction_date = await self._get_budget_period_start_date(period=period)
         new_budgets = []
+        category_ids = [budget.category_id for budget in budgets]
+        print(f"Category IDs: {category_ids}")
         for budget in budgets:
+            # TODO: Optimize this query later.
             transactions = self.transaction_service.crud_transaction.get_transaction_by_category_id_and_type(
                 category_id=budget.category_id,
                 user_id=user_id,
