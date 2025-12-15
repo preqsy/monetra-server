@@ -1,5 +1,6 @@
 from typing import Optional
 from sqlalchemy.orm import joinedload
+from core.db import get_db
 from crud.base import CRUDBase
 from models.category import UserCategory
 from models.currency import UserCurrency
@@ -21,5 +22,8 @@ class CRUDAuthUser(CRUDBase[User]):
         )
 
 
+db_session = next(get_db())
+
+
 def get_crud_auth_user() -> CRUDAuthUser:
-    return CRUDAuthUser(model=User)
+    return CRUDAuthUser(model=User, db=db_session)

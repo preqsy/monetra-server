@@ -1,3 +1,4 @@
+from core.db import get_db
 from crud.base import CRUDBase
 from models.rules import TransactionRule
 
@@ -18,5 +19,8 @@ class CRUDRules(CRUDBase[TransactionRule]):
         )
 
 
+db_session = next(get_db())
+
+
 def get_crud_rules():
-    return CRUDRules(model=TransactionRule)
+    return CRUDRules(model=TransactionRule, db=db_session)

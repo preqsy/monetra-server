@@ -24,7 +24,7 @@ class CurrencyService:
 
         if not currency:
             raise MissingResource(message="Currency not found")
-        if self.crud_user_currency.get_user_currency_by_currency(
+        if self.crud_user_currency.get_user_currency_by_currency_id(
             user_id, data_obj.currency_id
         ):
             raise MissingResource(message="Currency already added")
@@ -45,10 +45,11 @@ class CurrencyService:
         if not user_currency:
             raise MissingResource(message="User currency not found")
 
-        if data_obj.is_default:
+        if data_obj.is_default and not user_currency.is_default:
             self.crud_user_currency.update_by_user_id(
                 user_id=user_id, data_obj=UserCurrencyUpdate(is_default=False)
             )
+
             await self.queue_connection.enqueue_job(
                 "update_currencies_exchange_rate", user_id, user_currency.currency.code
             )

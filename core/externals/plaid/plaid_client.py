@@ -52,7 +52,7 @@ class PlaidClient:
             raise InvalidRequest(message="Failed to exchange public token")
         return PlaidExchangeTokenResponse(**rsp.json())
 
-    async def get_accounts(self, access_token: str):
+    async def get_plaid_user_accounts(self, access_token: str):
         payload = {
             "client_id": self.client_id,
             "secret": self.secret,

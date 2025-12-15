@@ -14,7 +14,7 @@ def init_firebase():
     Initialize Firebase Admin SDK if not already initialized.
     """
 
-    print(f"Firebase: {firebase_json}")
+    # print(f"Firebase: {firebase_json}")
     if firebase_admin._apps:
         return firebase_admin.get_app()
 

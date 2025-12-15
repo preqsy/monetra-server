@@ -47,7 +47,7 @@ async def update_category(
     user: User = Depends(get_current_user),
 ):
     return await category_service.update_user_category(
-        user_id=user.id, data_obj=category, id=id
+        user_id=user.id, data_obj=category, category_id=id
     )
 
 
@@ -57,4 +57,4 @@ async def delete_category(
     category_service: CategoryService = Depends(get_category_service),
     user: User = Depends(get_current_user),
 ):
-    return await category_service.delete_user_category(user_id=user.id, id=id)
+    return await category_service.delete_user_category(user_id=user.id, category_id=id)

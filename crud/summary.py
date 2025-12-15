@@ -1,4 +1,5 @@
 from datetime import date
+from core.db import get_db
 from crud.base import CRUDBase
 from models.views import TotalSummary
 
@@ -14,5 +15,8 @@ class CRUDTotalSummary(CRUDBase[TotalSummary]):
         return query
 
 
+db_session = next(get_db())
+
+
 def get_crud_total_summary() -> CRUDTotalSummary:
-    return CRUDTotalSummary(TotalSummary)
+    return CRUDTotalSummary(model=TotalSummary, db=db_session)

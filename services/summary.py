@@ -1,15 +1,21 @@
 from datetime import date
 from crud.summary import CRUDTotalSummary
+from services.account import AccountService
+from services.transaction import TransactionService
 
 
 class AccountSummaryService:
     def __init__(
         self,
         crud_total_summary: CRUDTotalSummary,
+        account_service: AccountService,
+        transaction_service: TransactionService,
     ):
         self.crud_total_summary = crud_total_summary
+        self.account_service = account_service
+        self.transaction_service = transaction_service
 
-    def get_account_summary(self, user_id: int, date: date):
+    async def get_account_summary(self, user_id: int, date: date):
         print(
             f"Getting summary for user_id: {user_id} and date: {date.month}-{date.year}"
         )
@@ -27,4 +33,17 @@ class AccountSummaryService:
                 "month": date.month,
                 "year": date.year,
             }
+        # summary = await self.calculate_account_balance(user_id=user_id)
+
+        net_total = await self.get_total_income_and_expenses(user_id=user_id)
+
+        print(f"Summary fetched: {net_total}")
         return summary
+
+    async def get_account_balance(self, user_id: int):
+        return await self.account_service.calculate_account_balance(user_id=user_id)
+
+    async def get_total_income_and_expenses(self, user_id: int):
+        return await self.transaction_service.calculate_total_income_and_expenses(
+            user_id=user_id
+        )

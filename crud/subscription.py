@@ -1,5 +1,6 @@
 from typing import Optional
 from sqlalchemy.orm import joinedload
+from core.db import get_db
 from crud.base import CRUDBase
 from models.user import SubscriptionPlan, UserSubscription
 
@@ -29,9 +30,12 @@ class CRUDSubscriptionPlan(CRUDBase[SubscriptionPlan]):
         )
 
 
+db_session = next(get_db())
+
+
 def get_crud_user_subscription() -> CRUDUserSubscription:
-    return CRUDUserSubscription(UserSubscription)
+    return CRUDUserSubscription(model=UserSubscription, db=db_session)
 
 
 def get_crud_subscription_plan() -> CRUDSubscriptionPlan:
-    return CRUDSubscriptionPlan(SubscriptionPlan)
+    return CRUDSubscriptionPlan(model=SubscriptionPlan, db=db_session)

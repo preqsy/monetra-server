@@ -41,9 +41,9 @@ class CategoryService:
         *,
         user_id: int,
         data_obj: UserCategoryUpdate,
-        id: int,
+        category_id: int,
     ):
-        category = self.crud_user_category.get_user_category(user_id, id)
+        category = self.crud_user_category.get_user_category_by_id(user_id, category_id)
         if not category:
             raise MissingResource(message="User category not found")
 
@@ -52,16 +52,16 @@ class CategoryService:
             id=category.category_id, data_obj=data_obj
         )
         self.crud_user_category.update(
-            id=id,
+            id=category_id,
             data_obj={"user_id": user_id, "category_id": updated_category.id},
         )
         return category
 
-    async def delete_user_category(self, *, user_id: int, id: int):
-        category = self.crud_user_category.get_user_category(user_id, id)
+    async def delete_user_category(self, *, user_id: int, category_id: int):
+        category = self.crud_user_category.get_user_category_by_id(user_id, category_id)
         if not category:
             raise MissingResource(message="User category not found")
 
         self.crud_category.delete(category.category_id)
-        self.crud_user_category.delete(id)
+        self.crud_user_category.delete(category_id)
         return None

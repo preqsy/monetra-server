@@ -46,7 +46,7 @@ async def get_transactions_by_account(
     transaction_service: TransactionService = Depends(get_transaction_service),
     user: User = Depends(get_current_user),
 ):
-    return await transaction_service.get_account_transactions(account_id, user.id)
+    return await transaction_service.get_one_account_transactions(account_id, user.id)
 
 
 @router.get(
