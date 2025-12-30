@@ -29,6 +29,7 @@ class BudgetService:
         data_obj.amount = to_minor_units(
             amount=data_obj.amount, currency=selected_currency.currency.code
         )
+        # data
         data_obj.name = selected_category.category.name
         data_obj.user_currency_id = selected_currency.id
 
@@ -45,25 +46,28 @@ class BudgetService:
             return []
 
         transaction_date = await self._get_budget_period_start_date(period=period)
-        new_budgets = []
+        budgets_dict_list = [convert_sql_models_to_dict(budget) for budget in budgets]
         category_ids = [budget.category_id for budget in budgets]
         print(f"Category IDs: {category_ids}")
-        for budget in budgets:
-            # TODO: Optimize this query later.
-            transactions = self.transaction_service.crud_transaction.get_transaction_by_category_id_and_type(
-                category_id=budget.category_id,
-                user_id=user_id,
-                transaction_date=transaction_date,
-                type=budget.type,
-            )
+
+        transactions = self.transaction_service.crud_transaction.get_transactions_by_category_ids(
+            category_ids=category_ids,
+            user_id=user_id,
+            transaction_date=transaction_date,
+            # type=budget.type,
+        )
+
+        for budget in budgets_dict_list:
+
+            budget_id = budget["category_id"]
+            filtered_trans = [t for t in transactions if t.category_id == budget_id]
+            print(f"second length of transactions: {len(filtered_trans)}")
             transaction_amount_sum = (
-                sum(t.amount for t in transactions) if transactions else 0
+                sum(t.amount for t in filtered_trans) if filtered_trans else 0
             )
 
-            budget_dict = convert_sql_models_to_dict(budget)
-            budget_dict["spent_amount"] = transaction_amount_sum
-            new_budgets.append(budget_dict)
-        return new_budgets
+            budget["spent_amount"] = transaction_amount_sum
+        return budgets_dict_list
 
     async def get_total_budget(
         self,
