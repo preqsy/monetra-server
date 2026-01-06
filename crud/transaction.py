@@ -93,12 +93,12 @@ class CRUDTransaction(CRUDBase[Transaction]):
         transaction_date: datetime = None,
     ) -> list[Transaction]:
         query = self._get_transaction_query_by_user_id(user_id).filter(
-            Transaction.category_id.in_(category_ids)
+            Transaction.category_id.in_(category_ids),
+            Transaction.date >= transaction_date,
         )
         if transaction_date:
             query = query.filter(Transaction.date >= transaction_date)
         return query.all()
-        # )
 
     async def get_transaction_by_type_and_date(
         self,

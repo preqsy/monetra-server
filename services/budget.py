@@ -29,7 +29,6 @@ class BudgetService:
         data_obj.amount = to_minor_units(
             amount=data_obj.amount, currency=selected_currency.currency.code
         )
-        # data
         data_obj.name = selected_category.category.name
         data_obj.user_currency_id = selected_currency.id
 
@@ -48,13 +47,13 @@ class BudgetService:
         transaction_date = await self._get_budget_period_start_date(period=period)
         budgets_dict_list = [convert_sql_models_to_dict(budget) for budget in budgets]
         category_ids = [budget.category_id for budget in budgets]
-        print(f"Category IDs: {category_ids}")
 
-        transactions = self.transaction_service.crud_transaction.get_transactions_by_category_ids(
-            category_ids=category_ids,
-            user_id=user_id,
-            transaction_date=transaction_date,
-            # type=budget.type,
+        transactions = (
+            self.transaction_service.crud_transaction.get_transactions_by_category_ids(
+                category_ids=category_ids,
+                user_id=user_id,
+                transaction_date=transaction_date,
+            )
         )
 
         for budget in budgets_dict_list:

@@ -1,5 +1,5 @@
 from arq import ArqRedis
-from core.exceptions import MissingResource
+from core.exceptions import MissingResource, ResourceExists
 from crud.currency import (
     CRUDCurrency,
     CRUDUserCurrency,
@@ -27,7 +27,7 @@ class CurrencyService:
         if self.crud_user_currency.get_user_currency_by_currency_id(
             user_id, data_obj.currency_id
         ):
-            raise MissingResource(message="Currency already added")
+            raise ResourceExists(message="Currency already added")
 
         if data_obj.is_default:
             self.crud_user_currency.update_by_user_id(
