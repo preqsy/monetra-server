@@ -6,6 +6,7 @@ from sqlalchemy import Column
 from core.exceptions import MissingResource
 from core.externals.mono.mono_client import MonoClient
 from core.externals.schema import MonoTransactionSchema
+from core.topics.transactions import TRANSACTION_CREATED
 from crud.account import CRUDAccount
 from crud.category import CRUDCategory, CRUDUserCategory
 from crud.currency import CRUDUserCurrency
@@ -14,11 +15,13 @@ from crud.transaction import CRUDTransaction
 from models.account import Account
 from models.category import Category, UserCategory
 from models.currency import UserCurrency
+from models.kafka_models import TransactionDoc
 from models.rules import TransactionRule
 from models.transaction import Transaction
 from schemas.account import MonoAccountCreate
 from schemas.enums import AccountTypeEnum, MonoTransactionTypeEnum, TransactionTypeEnum
 from schemas.transaction import MonoTransactionCreate, TransactionCreate
+from services.kafka_producer import publish
 from utils.currency_conversion import from_minor_units, to_minor_units
 from utils.helper import convert_sql_models_to_dict, extract_beneficiary
 
@@ -34,6 +37,7 @@ class TransactionService:
         mono_client: MonoClient,
         crud_rules: CRUDRules,
         crud_category: CRUDCategory,
+        # producer: KafkaProducer,
     ):
         self.crud_transaction = crud_transaction
         self.queue_connection = queue_connection
@@ -43,6 +47,7 @@ class TransactionService:
         self.mono_client = mono_client
         self.crud_rules = crud_rules
         self.crud_category = crud_category
+        # self.producer = producer
 
     async def create_transaction(
         self, data_obj: TransactionCreate, user_id: Column[int]
@@ -62,14 +67,14 @@ class TransactionService:
         user_currency, _ = await self.get_user_currency(
             user_id, data_obj.user_currency_id
         )
-        data_obj.user_currency_id = user_currency.id
+        data_obj.user_currency_id = user_currency.id  # type: ignore
 
         data_obj.account_id = await self.validate_user_account(
-            user_id=user_id, account_id=data_obj.account_id, is_paid=data_obj.is_paid
+            user_id=user_id, account_id=data_obj.account_id, is_paid=data_obj.is_paid  # type: ignore
         )
 
         data_obj.amount = to_minor_units(
-            amount=data_obj.amount, currency=user_currency.currency.code
+            amount=data_obj.amount, currency=user_currency.currency.code  # type: ignore
         )
         data_obj.amount_in_default = data_obj.amount
 
@@ -77,9 +82,12 @@ class TransactionService:
         data_obj.date = (
             datetime.now(timezone.utc) if not data_obj.date else data_obj.date
         )
-        category = await self.validate_user_category(user_id, data_obj.category_id)
-        data_obj.category_id = category.category_id
-        return self.crud_transaction.create(data_obj)
+        category = await self.validate_user_category(user_id, data_obj.category_id)  # type: ignore
+        data_obj.category_id = category.category_id  # type: ignore
+        transaction = self.crud_transaction.create(data_obj)
+        print(f"User currency: {user_currency.currency}")
+        await self._publish_created_transaction(transaction)
+        return transaction
 
     async def list_user_transactions(
         self, user_id: int, date: date
@@ -323,6 +331,23 @@ class TransactionService:
                 ).model_dump()
             )
         return prepared_transactions
+
+    async def _publish_created_transaction(self, transaction: Transaction):
+        event_dict = TransactionDoc(
+            doc_id=transaction.id,  # type: ignore
+            doc_type="transaction",
+            user_id=transaction.user_id,  # type: ignore
+            transaction_id=transaction.id,  # type: ignore
+            account_id=transaction.account_id,  # type: ignore
+            category=transaction.category.name,
+            amount=transaction.amount,  # type: ignore
+            # date_utc=transaction.created_at,
+            category_id=transaction.category_id,  # type: ignore
+            currency=transaction.user_currency.currency.code,
+            transaction_type=transaction.transaction_type,
+        ).model_dump()
+        print(f"Event dict: {event_dict}")
+        publish(event=event_dict, topic=TRANSACTION_CREATED)
 
     async def get_deduped_transactions(
         self,

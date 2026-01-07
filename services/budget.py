@@ -15,7 +15,7 @@ class BudgetService:
         transaction_service: TransactionService,
     ):
         self.crud_budget = crud_budget
-        self.transaction_service = transaction_service
+        self.transaction_service = transaction_service  # TODO: DON'T USE TRANSACTION SERVICE TO VALIDATE CATEGORY
 
     async def create_budget(self, data_obj: BudgetCreate, user_id: int):
         selected_currency, _ = await self.transaction_service.get_user_currency(
