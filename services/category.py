@@ -4,6 +4,7 @@ from crud.category import (
     CRUDCategory,
     CRUDUserCategory,
 )
+from models.category import UserCategory
 from schemas.category import CategoryCreate, UserCategoryCreate, UserCategoryUpdate
 
 
@@ -65,3 +66,17 @@ class CategoryService:
         self.crud_category.delete(category.category_id)
         self.crud_user_category.delete(category_id)
         return None
+
+    async def validate_user_category(
+        self, user_id: int, category_id: int | None
+    ) -> UserCategory:
+        user_categories = self.crud_user_category.get_user_categories(user_id)
+        selected_category = None
+        # TODO: Use default category if no user categories exist instead of the first one
+        if category_id not in [cat.category_id for cat in user_categories]:
+            selected_category = user_categories[0] if user_categories else None
+        else:
+            selected_category = next(
+                (cat for cat in user_categories if cat.category_id == category_id), None
+            )
+        return selected_category

@@ -21,6 +21,9 @@ from models.transaction import Transaction
 from schemas.account import MonoAccountCreate
 from schemas.enums import AccountTypeEnum, MonoTransactionTypeEnum, TransactionTypeEnum
 from schemas.transaction import MonoTransactionCreate, TransactionCreate
+from services.account import AccountService
+from services.category import CategoryService
+from services.currency import CurrencyService
 from services.kafka_producer import publish
 from utils.currency_conversion import from_minor_units, to_minor_units
 from utils.helper import convert_sql_models_to_dict, extract_beneficiary
@@ -37,7 +40,9 @@ class TransactionService:
         mono_client: MonoClient,
         crud_rules: CRUDRules,
         crud_category: CRUDCategory,
-        # producer: KafkaProducer,
+        currency_service=CurrencyService,
+        account_service=AccountService,
+        category_service=CategoryService,
     ):
         self.crud_transaction = crud_transaction
         self.queue_connection = queue_connection
@@ -47,7 +52,9 @@ class TransactionService:
         self.mono_client = mono_client
         self.crud_rules = crud_rules
         self.crud_category = crud_category
-        # self.producer = producer
+        self.currency_service = currency_service
+        self.account_service = account_service
+        self.category_service = category_service
 
     async def create_transaction(
         self, data_obj: TransactionCreate, user_id: Column[int]
@@ -64,12 +71,12 @@ class TransactionService:
             and data_obj.transaction_type == TransactionTypeEnum.EXPENSE
         ):
             data_obj.amount = abs(data_obj.amount)
-        user_currency, _ = await self.get_user_currency(
+        user_currency, _ = await self.currency_service.get_user_currency(
             user_id, data_obj.user_currency_id
         )
         data_obj.user_currency_id = user_currency.id  # type: ignore
 
-        data_obj.account_id = await self.validate_user_account(
+        data_obj.account_id = await self.account_service.validate_user_account(
             user_id=user_id, account_id=data_obj.account_id, is_paid=data_obj.is_paid  # type: ignore
         )
 
@@ -82,10 +89,10 @@ class TransactionService:
         data_obj.date = (
             datetime.now(timezone.utc) if not data_obj.date else data_obj.date
         )
-        category = await self.validate_user_category(user_id, data_obj.category_id)  # type: ignore
+        category = await self.category_service.validate_user_category(user_id, data_obj.category_id)  # type: ignore
         data_obj.category_id = category.category_id  # type: ignore
         transaction = self.crud_transaction.create(data_obj)
-        print(f"User currency: {user_currency.currency}")
+
         await self._publish_created_transaction(transaction)
         return transaction
 
@@ -177,63 +184,6 @@ class TransactionService:
             "total_expense": expense or Decimal(0),
         }
 
-    async def get_user_currency(
-        self, user_id: int, user_currency_id: int | None
-    ) -> Tuple[UserCurrency, UserCurrency]:
-        user_currencies = self.crud_user_currency.get_user_currencies(user_id)
-        default_currency = sorted(
-            user_currencies, key=lambda x: x.is_default, reverse=True
-        )[0]
-        selected_user_currency = None
-        if not user_currency_id:
-            selected_user_currency = default_currency
-        elif user_currency_id not in [uc.id for uc in user_currencies]:
-            selected_user_currency = default_currency
-        else:
-            selected_user_currency = next(
-                (uc for uc in user_currencies if uc.id == user_currency_id), None
-            )
-        return selected_user_currency, default_currency
-
-    async def validate_user_category(
-        self, user_id: int, category_id: int | None
-    ) -> UserCategory:
-        user_categories = self.crud_user_category.get_user_categories(user_id)
-        selected_category = None
-        # TODO: Use default category if no user categories exist instead of the first one
-        if category_id not in [cat.category_id for cat in user_categories]:
-            selected_category = user_categories[0] if user_categories else None
-        else:
-            selected_category = next(
-                (cat for cat in user_categories if cat.category_id == category_id), None
-            )
-        return selected_category
-
-    async def validate_user_account(
-        self,
-        user_id: Column[int],
-        account_id: int,
-        is_paid: bool = True,
-    ):
-        user_accounts = self.crud_account.get_accounts(user_id)
-        if not user_accounts:
-            raise MissingResource(message="No accounts found for the user.")
-        if account_id:
-            if account_id not in [account.id for account in user_accounts]:
-                account_id = None
-        if not account_id:
-            for account in user_accounts:
-                if account.account_type == AccountTypeEnum.DEFAULT_PUBLIC:
-                    account_id = account.id
-                else:
-                    account_id = account.id
-        if not is_paid:
-            for account in user_accounts:
-                if account.account_type == AccountTypeEnum.DEFAULT_PRIVATE:
-                    account_id = account.id
-
-        return account_id
-
     async def create_mono_transactions(
         self,
         mono_account_id: str,
@@ -241,9 +191,11 @@ class TransactionService:
         account_id: int,
         start_date: date = None,
     ) -> None:
-        user_currency, user_default_currency = await self.get_user_currency(
-            user_id=user_id,
-            user_currency_id=None,
+        user_currency, user_default_currency = (
+            await self.currency_service.get_user_currency(
+                user_id=user_id,
+                user_currency_id=None,
+            )
         )
         transactions = await self.get_deduped_transactions(
             mono_account_id=mono_account_id,

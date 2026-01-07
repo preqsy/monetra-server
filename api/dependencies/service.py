@@ -34,39 +34,15 @@ from services import (
 from task_queue.main import get_queue_connection
 
 
-def get_transaction_service(
-    crud_transaction=Depends(get_crud_transaction),
-    queue_connection=Depends(get_queue_connection),
-    crud_user_currency=Depends(get_crud_user_currency),
-    crud_account=Depends(get_crud_account),
-    crud_user_category=Depends(get_crud_user_category),
-    crud_rules=Depends(get_crud_rules),
-    crud_category=Depends(get_crud_category),
-    mono_client=Depends(get_mono_client),
-) -> TransactionService:
-    return TransactionService(
-        crud_transaction=crud_transaction,
-        queue_connection=queue_connection,
-        crud_user_currency=crud_user_currency,
-        crud_account=crud_account,
-        crud_user_category=crud_user_category,
-        mono_client=mono_client,
-        crud_rules=crud_rules,
-        crud_category=crud_category,
-    )
-
-
 def get_account_service(
     crud_account=Depends(get_crud_account),
     crud_currency=Depends(get_crud_currency),
     crud_user_currency=Depends(get_crud_user_currency),
-    transaction_service=Depends(get_transaction_service),
 ) -> AccountService:
     return AccountService(
         crud_account=crud_account,
         crud_currency=crud_currency,
         crud_user_currency=crud_user_currency,
-        transaction_service=transaction_service,
     )
 
 
@@ -143,25 +119,45 @@ async def get_subscription_service(
     )
 
 
-def get_account_summary_service(
-    crud_total_summary=Depends(get_crud_total_summary),
-    account_service=Depends(get_account_service),
-    transaction_service=Depends(get_transaction_service),
-) -> AccountSummaryService:
-    return AccountSummaryService(
-        crud_total_summary=crud_total_summary,
-        account_service=account_service,
-        transaction_service=transaction_service,
-    )
-
-
 def get_budget_service(
     crud_budget=Depends(get_crud_budget),
-    transaction_service=Depends(get_transaction_service),
+    crud_transaction=Depends(get_crud_transaction),
+    currency_service=Depends(get_currency_service),
+    category_service=Depends(get_category_service),
 ) -> BudgetService:
     return BudgetService(
         crud_budget=crud_budget,
-        transaction_service=transaction_service,
+        crud_transaction=crud_transaction,
+        currency_service=currency_service,
+        category_service=category_service,
+    )
+
+
+def get_transaction_service(
+    crud_transaction=Depends(get_crud_transaction),
+    queue_connection=Depends(get_queue_connection),
+    crud_user_currency=Depends(get_crud_user_currency),
+    crud_account=Depends(get_crud_account),
+    crud_user_category=Depends(get_crud_user_category),
+    crud_rules=Depends(get_crud_rules),
+    crud_category=Depends(get_crud_category),
+    mono_client=Depends(get_mono_client),
+    account_service=Depends(get_account_service),
+    currency_service=Depends(get_currency_service),
+    category_service=Depends(get_category_service),
+) -> TransactionService:
+    return TransactionService(
+        crud_transaction=crud_transaction,
+        queue_connection=queue_connection,
+        crud_user_currency=crud_user_currency,
+        crud_account=crud_account,
+        crud_user_category=crud_user_category,
+        mono_client=mono_client,
+        crud_rules=crud_rules,
+        crud_category=crud_category,
+        account_service=account_service,
+        currency_service=currency_service,
+        category_service=category_service,
     )
 
 
@@ -172,6 +168,8 @@ def get_planner_service(
     crud_user_category=Depends(get_crud_user_category),
     transaction_service=Depends(get_transaction_service),
     category_service=Depends(get_category_service),
+    account_service=Depends(get_account_service),
+    currency_service=Depends(get_currency_service),
 ) -> PlannerService:
     return PlannerService(
         crud_planner=crud_planner,
@@ -180,4 +178,18 @@ def get_planner_service(
         crud_user_category=crud_user_category,
         transaction_service=transaction_service,
         category_service=category_service,
+        currency_service=currency_service,
+        account_service=account_service,
+    )
+
+
+def get_account_summary_service(
+    crud_total_summary=Depends(get_crud_total_summary),
+    account_service=Depends(get_account_service),
+    transaction_service=Depends(get_transaction_service),
+) -> AccountSummaryService:
+    return AccountSummaryService(
+        crud_total_summary=crud_total_summary,
+        account_service=account_service,
+        transaction_service=transaction_service,
     )

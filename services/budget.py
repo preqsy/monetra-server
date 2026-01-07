@@ -1,8 +1,11 @@
 from datetime import datetime, timedelta, timezone
 from core.exceptions import InvalidRequest
 from crud.budget import CRUDBudget
+from crud.transaction import CRUDTransaction
 from schemas.budget import BudgetCreate, TotalBudgetCreate
 from schemas.enums import BudgetPeriodEnum, BudgetTypeEnum, TransactionTypeEnum
+from services.category import CategoryService
+from services.currency import CurrencyService
 from services.transaction import TransactionService
 from utils.currency_conversion import to_minor_units
 from utils.helper import convert_sql_models_to_dict
@@ -12,16 +15,20 @@ class BudgetService:
     def __init__(
         self,
         crud_budget: CRUDBudget,
-        transaction_service: TransactionService,
+        crud_transaction: CRUDTransaction,
+        currency_service: CurrencyService,
+        category_service: CategoryService,
     ):
         self.crud_budget = crud_budget
-        self.transaction_service = transaction_service  # TODO: DON'T USE TRANSACTION SERVICE TO VALIDATE CATEGORY
+        self.crud_transaction = crud_transaction
+        self.currency_service = currency_service
+        self.category_service = category_service
 
     async def create_budget(self, data_obj: BudgetCreate, user_id: int):
-        selected_currency, _ = await self.transaction_service.get_user_currency(
+        selected_currency, _ = await self.currency_service.get_user_currency(
             user_id=user_id, user_currency_id=data_obj.user_currency_id
         )
-        selected_category = await self.transaction_service.validate_user_category(
+        selected_category = await self.category_service.validate_user_category(
             user_id=user_id, category_id=data_obj.category_id
         )
         data_obj.user_id = user_id
@@ -48,12 +55,10 @@ class BudgetService:
         budgets_dict_list = [convert_sql_models_to_dict(budget) for budget in budgets]
         category_ids = [budget.category_id for budget in budgets]
 
-        transactions = (
-            self.transaction_service.crud_transaction.get_transactions_by_category_ids(
-                category_ids=category_ids,
-                user_id=user_id,
-                transaction_date=transaction_date,
-            )
+        transactions = self.crud_transaction.get_transactions_by_category_ids(
+            category_ids=category_ids,
+            user_id=user_id,
+            transaction_date=transaction_date,
         )
 
         for budget in budgets_dict_list:
@@ -84,7 +89,7 @@ class BudgetService:
         )
         total_budget = budget.amount if budget else 0
 
-        transactions = await self.transaction_service.crud_transaction.get_transaction_by_type_and_date(
+        transactions = await self.crud_transaction.get_transaction_by_type_and_date(
             user_id=user_id,
             type=TransactionTypeEnum.EXPENSE,
             transaction_date=transaction_date,
