@@ -54,12 +54,13 @@ class AIInsightService:
             currency=currency_code,
         )
         print("Total amount:", amount)
+        print("Currency code:", currency_code)
         rsp = await self.http_client.post(
             "/nl/format-price",
             json={
                 "category": rsp.resolved_candidates[0].category,
                 "amount": int(amount),
-                "currency": transactions[0]["user_currency"]["currency"]["code"],
+                "currency": currency_code,
             },
         )
         return rsp.json()
