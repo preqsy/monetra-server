@@ -63,3 +63,7 @@ class NLResolveResult(BaseModel):
 
 class NlRequest(BaseModel):
     query: str
+
+
+class NlResponse(BaseModel):
+    message: str

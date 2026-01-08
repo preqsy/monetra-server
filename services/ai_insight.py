@@ -14,11 +14,11 @@ class AIInsightService:
         crud_transaction: CRUDTransaction,
         crud_user_currency: CRUDUserCurrency,
     ):
-        self.http_client = AsyncClient(base_url="http://localhost:9000", timeout=60.0)
+        self.http_client = AsyncClient(base_url="http://localhost:9000", timeout=600.0)
         self.crud_transaction = crud_transaction
         self.crud_user_currency = crud_user_currency
 
-    async def query_insight(self, query: str, user_id: int) -> Decimal:
+    async def query_insight(self, query: str, user_id: int):
         response = await self.http_client.post(
             "/nl/resolve",
             json={"query": query, "user_id": user_id},
@@ -55,12 +55,23 @@ class AIInsightService:
         )
         print("Total amount:", amount)
         print("Currency code:", currency_code)
-        rsp = await self.http_client.post(
-            "/nl/format-price",
-            json={
-                "category": rsp.resolved_candidates[0].category,
-                "amount": int(amount),
-                "currency": currency_code,
-            },
-        )
-        return rsp.json()
+
+        payload = {
+            "category": (
+                rsp.resolved_candidates[0].category
+                if len(rsp.resolved_candidates) > 0
+                else rsp.parse.target_text
+            ),
+            "amount": int(to_minor_units(Decimal(amount), currency_code)),
+            "currency": currency_code,
+        }
+
+        async with self.http_client.stream("POST", "nl/format", json=payload) as rsp:
+            rsp.raise_for_status()
+
+            async for line in rsp.aiter_lines():
+                if not line:
+                    continue
+                if line.startswith("data: "):
+                    print("Sending line:", line)
+                    yield line + " " + "\n\n"
