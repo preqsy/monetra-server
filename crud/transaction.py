@@ -70,20 +70,14 @@ class CRUDTransaction(CRUDBase[Transaction]):
     def get_transaction_by_category_id(self, category_id: int, user_id: int):
         return self._get_transaction_object_by_category_id(category_id, user_id).all()
 
-    def get_transaction_by_category_id_and_type(
+    def get_transactions_by_category_id(
         self,
         user_id: int,
         category_id: int,
-        transaction_date: datetime,
-        type: str = None,
     ) -> list[Transaction]:
         query = self._get_transaction_object_by_category_id(
             user_id=user_id, category_id=category_id
-        ).filter(
-            Transaction.date >= transaction_date,
-            # Transaction.transaction_type == type,
         )
-
         return query.all()
 
     def get_transactions_by_category_ids(
