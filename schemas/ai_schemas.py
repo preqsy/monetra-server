@@ -59,3 +59,7 @@ class NLResolveResult(BaseModel):
 
     total_hits_considered: int = Field(ge=0)
     error: Optional[str] = None
+
+
+class NlRequest(BaseModel):
+    query: str

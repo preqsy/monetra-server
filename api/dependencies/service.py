@@ -198,5 +198,9 @@ def get_account_summary_service(
 
 def get_ai_insight_service(
     crud_transaction=Depends(get_crud_transaction),
+    crud_user_currency=Depends(get_crud_user_currency),
 ) -> AIInsightService:
-    return AIInsightService(crud_transaction=crud_transaction)
+    return AIInsightService(
+        crud_transaction=crud_transaction,
+        crud_user_currency=crud_user_currency,
+    )
