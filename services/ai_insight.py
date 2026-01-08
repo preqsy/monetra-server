@@ -4,7 +4,7 @@ from httpx import AsyncClient
 from crud.currency import CRUDUserCurrency
 from crud.transaction import CRUDTransaction
 from schemas.ai_schemas import NLResolveResult
-from utils.currency_conversion import from_minor_units, to_minor_units
+from utils.currency_conversion import from_minor_units
 from utils.helper import convert_sql_models_to_dict
 
 
@@ -53,7 +53,6 @@ class AIInsightService:
             amount_minor=total_transactions_amount,
             currency=currency_code,
         )
-        print("Total amount:", amount)
         print("Currency code:", currency_code)
 
         payload = {
@@ -62,9 +61,10 @@ class AIInsightService:
                 if len(rsp.resolved_candidates) > 0
                 else rsp.parse.target_text
             ),
-            "amount": int(to_minor_units(Decimal(amount), currency_code)),
+            "amount": float((amount)),
             "currency": currency_code,
         }
+        print("Total amount:", float(amount))
 
         async with self.http_client.stream("POST", "nl/format", json=payload) as rsp:
             rsp.raise_for_status()
