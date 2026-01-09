@@ -12,6 +12,7 @@ from .rules import router as rules_router
 from .subscription import router as subscription_router
 from .summary import router as summary_router
 from .budget import router as budget_router
+from .ai_insight import router as ai_insight_router
 
 
 router = APIRouter()
@@ -28,6 +29,7 @@ router.include_router(rules_router)
 router.include_router(subscription_router)
 router.include_router(summary_router)
 router.include_router(budget_router)
+router.include_router(ai_insight_router)
 
 
 @router.on_event("startup")

@@ -31,6 +31,7 @@ from services import (
     BudgetService,
 )
 
+from services.ai_insight import AIInsightService
 from task_queue.main import get_queue_connection
 
 
@@ -192,4 +193,14 @@ def get_account_summary_service(
         crud_total_summary=crud_total_summary,
         account_service=account_service,
         transaction_service=transaction_service,
+    )
+
+
+def get_ai_insight_service(
+    crud_transaction=Depends(get_crud_transaction),
+    crud_user_currency=Depends(get_crud_user_currency),
+) -> AIInsightService:
+    return AIInsightService(
+        crud_transaction=crud_transaction,
+        crud_user_currency=crud_user_currency,
     )
