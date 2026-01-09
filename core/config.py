@@ -24,6 +24,10 @@ class Settings(BaseSettings):
 
     EXCHANGE_API_KEY: str = ""
     EXCHANGE_RATE_BASE_URL: str = "https://v6.exchangerate-api.com/v6/"
+    KAFKA_CA_PEM: str = ""
+    KAFKA_SERVICE_CERT: str = ""
+    KAFKA_SERVICE_KEY: str = ""
+    KAFKA_URL: str = ""
 
     BACKEND_HEADER: str
 

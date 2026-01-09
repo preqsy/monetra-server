@@ -24,6 +24,7 @@ class AIInsightService:
             "/nl/resolve",
             json={"query": query, "user_id": user_id},
             headers={"monetra-ai-key": settings.BACKEND_HEADER},
+            params={"llm_provider": "groq"},
         )
         # response.raise_for_status()
         rsp = NLResolveResult(**response.json())
@@ -73,6 +74,7 @@ class AIInsightService:
             "nl/format",
             json=payload,
             headers={"monetra-ai-key": settings.BACKEND_HEADER},
+            params={"llm_provider": "groq"},
         ) as rsp:
             rsp.raise_for_status()
 
