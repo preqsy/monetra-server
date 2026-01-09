@@ -6,6 +6,7 @@ from crud.transaction import CRUDTransaction
 from schemas.ai_schemas import NLResolveResult
 from utils.currency_conversion import from_minor_units
 from utils.helper import convert_sql_models_to_dict
+from core import settings
 
 
 class AIInsightService:
@@ -22,6 +23,7 @@ class AIInsightService:
         response = await self.http_client.post(
             "/nl/resolve",
             json={"query": query, "user_id": user_id},
+            headers={"monetra-ai-key": settings.BACKEND_HEADER},
         )
         # response.raise_for_status()
         rsp = NLResolveResult(**response.json())
@@ -66,12 +68,17 @@ class AIInsightService:
         }
         print("Total amount:", float(amount))
 
-        async with self.http_client.stream("POST", "nl/format", json=payload) as rsp:
+        async with self.http_client.stream(
+            "POST",
+            "nl/format",
+            json=payload,
+            headers={"monetra-ai-key": settings.BACKEND_HEADER},
+        ) as rsp:
             rsp.raise_for_status()
 
             async for line in rsp.aiter_lines():
                 if not line:
                     continue
                 if line.startswith("data: "):
-                    print("Sending line:", line)
+                    # print("Sending line:", line)
                     yield line + " " + "\n\n"

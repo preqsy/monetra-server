@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     EXCHANGE_API_KEY: str = ""
     EXCHANGE_RATE_BASE_URL: str = "https://v6.exchangerate-api.com/v6/"
 
+    BACKEND_HEADER: str
+
     class Config:
         env_file = env_path
         # Allow extra fields for backward compatibility
