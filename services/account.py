@@ -9,7 +9,6 @@ from crud.currency import (
 from models.account import Account
 from schemas.account import AccountCreate
 from schemas.enums import AccountCategoryEnum, AccountTypeEnum
-from services.transaction import TransactionService
 from utils.currency_conversion import to_minor_units
 from utils.helper import convert_sql_models_to_dict, extract_beneficiary
 
@@ -20,12 +19,10 @@ class AccountService:
         crud_account: CRUDAccount,
         crud_user_currency: CRUDUserCurrency,
         crud_currency: CRUDCurrency,
-        transaction_service: TransactionService,
     ):
         self.crud_account = crud_account
         self.crud_user_currency = crud_user_currency
         self.crud_currency = crud_currency
-        self.transaction_service = transaction_service
 
     async def create_account(
         self,
@@ -109,3 +106,28 @@ class AccountService:
             total_balance += account["amount_in_default"]
 
         return total_balance
+
+    async def validate_user_account(
+        self,
+        user_id: Column[int],
+        account_id: int,
+        is_paid: bool = True,
+    ):
+        user_accounts = self.crud_account.get_accounts(user_id)
+        if not user_accounts:
+            raise MissingResource(message="No accounts found for the user.")
+        if account_id:
+            if account_id not in [account.id for account in user_accounts]:
+                account_id = None
+        if not account_id:
+            for account in user_accounts:
+                if account.account_type == AccountTypeEnum.DEFAULT_PUBLIC:
+                    account_id = account.id
+                else:
+                    account_id = account.id
+        if not is_paid:
+            for account in user_accounts:
+                if account.account_type == AccountTypeEnum.DEFAULT_PRIVATE:
+                    account_id = account.id
+
+        return account_id

@@ -17,6 +17,7 @@ python-dateutil = "^2.9.0"
 alembic = "^1.16.4"
 mypy = "^1.17.1"
 pydantic = "^2.11.9"
+confluent-kafka = "^2.13.0"
 
 
 [build-system]

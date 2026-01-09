@@ -11,7 +11,9 @@ from schemas.category import CategoryCreate
 from schemas.enums import PlannerTypeEnum, TransactionTypeEnum
 from schemas.planner import PlannerAmountUpdate, PlannerCreate, PlannerUpdate
 from schemas.transaction import TransactionCreate
+from services.account import AccountService
 from services.category import CategoryService
+from services.currency import CurrencyService
 from services.transaction import TransactionService
 from utils.currency_conversion import to_minor_units
 from utils.helper import convert_sql_models_to_dict
@@ -26,6 +28,8 @@ class PlannerService:
         crud_user_category: CRUDUserCategory,
         transaction_service: TransactionService,
         category_service: CategoryService,
+        currency_service: CurrencyService,
+        account_service: AccountService,
     ):
         self.crud_planner = crud_planner
         self.crud_user_currency = crud_user_currency
@@ -33,12 +37,14 @@ class PlannerService:
         self.crud_user_category = crud_user_category
         self.category_service = category_service
         self.transaction_service = transaction_service
+        self.currency_service = currency_service
+        self.account_service = account_service
 
     async def create_planner(self, user_id: int, data_obj: PlannerCreate):
         (
             user_currency,
             user_default_currency,
-        ) = await self.transaction_service.get_user_currency(
+        ) = await self.currency_service.get_user_currency(
             user_id=user_id, user_currency_id=data_obj.user_currency_id
         )
 
@@ -73,7 +79,7 @@ class PlannerService:
         data_obj.category_id = category.id
         if data_obj.type == PlannerTypeEnum.GOAL:
             data_obj.role = None
-        data_obj.account_id = await self.transaction_service.validate_user_account(
+        data_obj.account_id = await self.account_service.validate_user_account(
             user_id=user_id, account_id=data_obj.account_id
         )
         data_obj.user_id = user_id
@@ -91,12 +97,10 @@ class PlannerService:
         planners = [convert_sql_models_to_dict(p) for p in planners]
         new_planners = []
         for planner in planners:
-            selected_currency, _ = await self.transaction_service.get_user_currency(
-                user_id=user_id, user_currency_id=planner["user_currency_id"]
-            )
+            selected_currency = planner["user_currency"]
             required_amount_in_default = Decimal(planner["required_amount"])
             accumulated_amount_in_default = Decimal(planner["accumulated_amount"])
-            rate = Decimal(str(selected_currency.exchange_rate))
+            rate = Decimal(str(selected_currency["exchange_rate"]))
 
             planner["required_amount_in_default"] = (
                 required_amount_in_default / rate
@@ -133,7 +137,7 @@ class PlannerService:
 
         transaction_amount = data_obj.accumulated_amount
         selected_currency, default_currency = (
-            await self.transaction_service.get_user_currency(
+            await self.currency_service.get_user_currency(
                 user_id=user_id, user_currency_id=data_obj.user_currency_id
             )
         )
@@ -161,7 +165,7 @@ class PlannerService:
             currency=default_currency.currency.code,
         )
         if data_obj.account_id:
-            data_obj.account_id = await self.transaction_service.validate_user_account(
+            data_obj.account_id = await self.account_service.validate_user_account(
                 user_id=user_id, account_id=data_obj.account_id
             )
         await self._create_planner_transaction(

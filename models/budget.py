@@ -11,6 +11,7 @@ class Budget(Base):
     name = Column(String, index=True, nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     amount = Column(Integer, nullable=False)
+    # amount_in_default = Column(Integer, nullable=True)
     period = Column(String, nullable=False)
     type = Column(String, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)

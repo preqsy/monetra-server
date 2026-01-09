@@ -10,6 +10,7 @@ from schemas.category import CreateCategoryResponse
 class BudgetCreate(BaseModel):
     name: Optional[str] = None
     amount: int
+    # amount_in_default: Optional[int] = None
     category_id: int
     user_currency_id: Optional[int] = None
     user_id: Optional[int] = None

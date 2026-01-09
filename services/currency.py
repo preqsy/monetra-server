@@ -1,9 +1,11 @@
+from typing import Tuple
 from arq import ArqRedis
-from core.exceptions import MissingResource
+from core.exceptions import MissingResource, ResourceExists
 from crud.currency import (
     CRUDCurrency,
     CRUDUserCurrency,
 )
+from models.currency import UserCurrency
 from schemas.currency import UserCurrencyCreate, UserCurrencyUpdate
 
 
@@ -27,7 +29,7 @@ class CurrencyService:
         if self.crud_user_currency.get_user_currency_by_currency_id(
             user_id, data_obj.currency_id
         ):
-            raise MissingResource(message="Currency already added")
+            raise ResourceExists(message="Currency already added")
 
         if data_obj.is_default:
             self.crud_user_currency.update_by_user_id(
@@ -56,3 +58,21 @@ class CurrencyService:
         self.crud_user_currency.update(id=data_obj.id, data_obj=data_obj)
 
         return user_currency
+
+    async def get_user_currency(
+        self, user_id: int, user_currency_id: int | None
+    ) -> Tuple[UserCurrency, UserCurrency]:
+        user_currencies = self.crud_user_currency.get_user_currencies(user_id)
+        default_currency = sorted(
+            user_currencies, key=lambda x: x.is_default, reverse=True
+        )[0]
+        selected_user_currency = None
+        if not user_currency_id:
+            selected_user_currency = default_currency
+        elif user_currency_id not in [uc.id for uc in user_currencies]:
+            selected_user_currency = default_currency
+        else:
+            selected_user_currency = next(
+                (uc for uc in user_currencies if uc.id == user_currency_id), None
+            )
+        return selected_user_currency, default_currency
