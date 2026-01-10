@@ -1,10 +1,14 @@
 import tempfile
 import threading
+import logging
 from confluent_kafka import Producer
 import json
 from confluent_kafka import Producer
 from core import settings
 from base64 import b64decode
+
+
+logger = logging.getLogger(__name__)
 
 
 # Write certs to temp files
@@ -35,11 +39,18 @@ producer = Producer(kafka_config)
 
 
 def publish(topic: str, event: dict):
-    producer.produce(
-        topic=topic,
-        key=str(event["user_id"]).encode(),
-        value=json.dumps(event).encode(),
-    )
+    print(f"Publishing message...")
+    try:
+        producer.produce(
+            topic=topic,
+            key=str(event["user_id"]).encode(),
+            value=json.dumps(event).encode(),
+        )
+        logger.debug(f"Successfully published message: {event}")
+    except Exception as e:
+        print(f"*****Error: {str(e)}")
+        logger.error(f"Failed to publish message: {str(e)}")
+        raise
 
 
 def poll_loop():

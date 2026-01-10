@@ -16,9 +16,7 @@ class AccountSummaryService:
         self.transaction_service = transaction_service
 
     async def get_account_summary(self, user_id: int, date: date):
-        print(
-            f"Getting summary for user_id: {user_id} and date: {date.month}-{date.year}"
-        )
+
         summary = self.crud_total_summary.get_total_summary(user_id=user_id, date=date)
         if not summary:
             return {
@@ -37,7 +35,6 @@ class AccountSummaryService:
 
         net_total = await self.get_total_income_and_expenses(user_id=user_id)
 
-        print(f"Summary fetched: {net_total}")
         return summary
 
     async def get_account_balance(self, user_id: int):

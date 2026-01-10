@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     FIREBASE_ADMIN_SDK_JSON_PATH: str = ""
     FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
 
-    ENVIRONMENT: str = "prod"
+    ENVIRONMENT: str = "dev"
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
