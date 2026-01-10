@@ -1,10 +1,14 @@
 import tempfile
 import threading
+import logging
 from confluent_kafka import Producer
 import json
 from confluent_kafka import Producer
 from core import settings
 from base64 import b64decode
+
+
+logger = logging.getLogger(__name__)
 
 
 # Write certs to temp files
@@ -15,28 +19,38 @@ def write_temp_file(b64_content):
     return tmp.name
 
 
-ca_path = write_temp_file(settings.KAFKA_CA_PEM)
-cert_path = write_temp_file(settings.KAFKA_SERVICE_CERT)
-key_path = write_temp_file(settings.KAFKA_SERVICE_KEY)
+ca_path = write_temp_file(settings.KAFKA_CONFIG.KAFKA_CA_PEM)
+cert_path = write_temp_file(settings.KAFKA_CONFIG.KAFKA_SERVICE_CERT)
+key_path = write_temp_file(settings.KAFKA_CONFIG.KAFKA_SERVICE_KEY)
 
-producer = Producer(
-    {
-        "bootstrap.servers": settings.KAFKA_URL,
-        "security.protocol": "SSL",
-        "ssl.ca.location": ca_path,
-        "ssl.certificate.location": cert_path,
-        "ssl.key.location": key_path,
-        "acks": "all",
-    }
-)
+kafka_config = {
+    "bootstrap.servers": "localhost:9092",
+    "acks": "all",
+}
+
+if settings.ENVIRONMENT == "prod":
+    kafka_config["bootstrap.servers"] = settings.KAFKA_CONFIG.KAFKA_URL
+    kafka_config["security.protocol"] = "SSL"
+    kafka_config["ssl.ca.location"] = ca_path
+    kafka_config["ssl.certificate.location"] = cert_path
+    kafka_config["ssl.key.location"] = key_path
+
+producer = Producer(kafka_config)
 
 
 def publish(topic: str, event: dict):
-    producer.produce(
-        topic=topic,
-        key=str(event["user_id"]).encode(),
-        value=json.dumps(event).encode(),
-    )
+    print(f"Publishing message...")
+    try:
+        producer.produce(
+            topic=topic,
+            key=str(event["user_id"]).encode(),
+            value=json.dumps(event).encode(),
+        )
+        logger.debug(f"Successfully published message: {event}")
+    except Exception as e:
+        print(f"*****Error: {str(e)}")
+        logger.error(f"Failed to publish message: {str(e)}")
+        raise
 
 
 def poll_loop():

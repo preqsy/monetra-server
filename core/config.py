@@ -4,12 +4,25 @@ from pathlib import Path
 env_path = str(Path.cwd()) + "/.env"
 
 
+class KafkaConfig(BaseSettings):
+    KAFKA_CA_PEM: str = ""
+    KAFKA_SERVICE_CERT: str = ""
+    KAFKA_SERVICE_KEY: str = ""
+    KAFKA_URL: str = ""
+
+    class Config:
+        env_file = env_path
+        extra = "ignore"
+
+
 class Settings(BaseSettings):
     DATABASE_URL: str = ""
     MONO_BASE_URL: str = "https://api.withmono.com/v2"
     MONO_SECRET_KEY: str = ""
     FIREBASE_ADMIN_SDK_JSON_PATH: str = ""
     FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
+
+    ENVIRONMENT: str = "dev"
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
@@ -24,12 +37,10 @@ class Settings(BaseSettings):
 
     EXCHANGE_API_KEY: str = ""
     EXCHANGE_RATE_BASE_URL: str = "https://v6.exchangerate-api.com/v6/"
-    KAFKA_CA_PEM: str = ""
-    KAFKA_SERVICE_CERT: str = ""
-    KAFKA_SERVICE_KEY: str = ""
-    KAFKA_URL: str = ""
 
-    BACKEND_HEADER: str
+    KAFKA_CONFIG: KafkaConfig = KafkaConfig()
+
+    BACKEND_HEADER: str = ""
 
     class Config:
         env_file = env_path
