@@ -15,20 +15,23 @@ def write_temp_file(b64_content):
     return tmp.name
 
 
-ca_path = write_temp_file(settings.KAFKA_CA_PEM)
-cert_path = write_temp_file(settings.KAFKA_SERVICE_CERT)
-key_path = write_temp_file(settings.KAFKA_SERVICE_KEY)
+ca_path = write_temp_file(settings.KAFKA_CONFIG.KAFKA_CA_PEM)
+cert_path = write_temp_file(settings.KAFKA_CONFIG.KAFKA_SERVICE_CERT)
+key_path = write_temp_file(settings.KAFKA_CONFIG.KAFKA_SERVICE_KEY)
 
-producer = Producer(
-    {
-        "bootstrap.servers": settings.KAFKA_URL,
-        "security.protocol": "SSL",
-        "ssl.ca.location": ca_path,
-        "ssl.certificate.location": cert_path,
-        "ssl.key.location": key_path,
-        "acks": "all",
-    }
-)
+kafka_config = {
+    "bootstrap.servers": "localhost:9092",
+    "acks": "all",
+}
+
+if settings.ENVIRONMENT == "prod":
+    kafka_config["bootstrap.servers"] = settings.KAFKA_CONFIG.KAFKA_URL
+    kafka_config["security.protocol"] = "SSL"
+    kafka_config["ssl.ca.location"] = ca_path
+    kafka_config["ssl.certificate.location"] = cert_path
+    kafka_config["ssl.key.location"] = key_path
+
+producer = Producer(kafka_config)
 
 
 def publish(topic: str, event: dict):
