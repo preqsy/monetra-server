@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     FIREBASE_ADMIN_SDK_JSON_PATH: str = ""
     FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
 
-    ENVIRONMENT: str = "dev"
+    ENVIRONMENT: str = "prod"
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
@@ -40,6 +40,7 @@ class Settings(BaseSettings):
 
     KAFKA_CONFIG: KafkaConfig = KafkaConfig()
 
+    AI_SERVICE_URL: str = "http://localhost:9000"
     BACKEND_HEADER: str = ""
 
     class Config:

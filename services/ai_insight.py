@@ -15,11 +15,12 @@ class AIInsightService:
         crud_transaction: CRUDTransaction,
         crud_user_currency: CRUDUserCurrency,
     ):
-        self.http_client = AsyncClient(base_url="http://localhost:9000", timeout=600.0)
+        self.http_client = AsyncClient(base_url=settings.AI_SERVICE_URL, timeout=600.0)
         self.crud_transaction = crud_transaction
         self.crud_user_currency = crud_user_currency
 
     async def query_insight(self, query: str, user_id: int):
+        print("Querying AI Insight Service with query:", settings.AI_SERVICE_URL, query)
         response = await self.http_client.post(
             "/nl/resolve",
             json={"query": query, "user_id": user_id},

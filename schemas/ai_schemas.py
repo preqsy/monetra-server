@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field
 
 from schemas.enums import TransactionTypeEnum
 
@@ -56,9 +56,6 @@ class NLResolveResult(BaseModel):
     resolved_candidates: List[ResolvedCategory] = Field(default_factory=list)
     discarded_candidates: List[DiscardedCategory] = Field(default_factory=list)
     category_scores: Optional[list] = []
-
-    total_hits_considered: int = Field(ge=0)
-    error: Optional[str] = None
 
 
 class NlRequest(BaseModel):
