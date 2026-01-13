@@ -291,7 +291,7 @@ class TransactionService:
             user_id=transaction.user_id,  # type: ignore
             transaction_id=transaction.id,  # type: ignore
             account_id=transaction.account_id,  # type: ignore
-            category=transaction.category.name,
+            category=transaction.category.name.lower(),
             amount=transaction.amount,  # type: ignore
             # date_utc=transaction.created_at,
             category_id=transaction.category_id,  # type: ignore
@@ -299,6 +299,7 @@ class TransactionService:
             transaction_type=transaction.transaction_type,
         ).model_dump()
         print(f"Event dict: {event_dict}")
+        print(f"Publishing to topic: {TRANSACTION_CREATED}")
         publish(event=event_dict, topic=TRANSACTION_CREATED)
 
     async def get_deduped_transactions(

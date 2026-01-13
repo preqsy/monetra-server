@@ -8,7 +8,13 @@ from core import settings
 from base64 import b64decode
 
 
-logger = logging.getLogger(__name__)
+if not logging.getLogger().handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+    )
+
+logger = logging.getLogger("producer")
 
 
 # Write certs to temp files
@@ -39,7 +45,7 @@ producer = Producer(kafka_config)
 
 
 def publish(topic: str, event: dict):
-    print(f"Publishing message...")
+    logger.info(f"Publishing message to topic: {topic}")
     try:
         producer.produce(
             topic=topic,
