@@ -6,7 +6,7 @@
             {"name": "Clothing", "type": "expense"},
             {"name": "Transport", "type": "expense"},
             {"name": "House", "type": "expense"},
-            {"name": "Enterainment", "type": "expense"},
+            {"name": "Entertainment", "type": "expense"},
             {"name": "Gifts", "type": "expense"},
             {"name": "Travel", "type": "expense"},
             {"name": "Education", "type": "expense"},
