@@ -20,6 +20,7 @@ async def query_insight(
     stream = ai_insight_service.query_insight(
         query=query.query,
         user_id=current_user.id,
+        session_id=query.session_id,
     )
     return StreamingResponse(
         stream,

@@ -3,7 +3,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from uuid import uuid4
 from httpx import AsyncClient
 
-from core.exceptions import InvalidRequest
+from core.exceptions import InvalidRequest, MissingResource
 from crud.chat import CRUDChat, CRUDSession
 from crud.currency import CRUDUserCurrency
 from crud.transaction import CRUDTransaction
@@ -23,7 +23,7 @@ class AIInsightService:
         crud_chat: CRUDChat,
         crud_session: CRUDSession,
     ):
-        self.http_client = AsyncClient(base_url=settings.AI_SERVICE_URL, timeout=60.0)
+        self.http_client = AsyncClient(base_url=settings.AI_SERVICE_URL, timeout=600.0)
         self.crud_transaction = crud_transaction
         self.crud_user_currency = crud_user_currency
         self.crud_chat = crud_chat
@@ -41,19 +41,32 @@ class AIInsightService:
 
         return session
 
-    async def query_insight(self, query: str, user_id: int):
-        print("Querying AI Insight Service with query:", settings.AI_SERVICE_URL, query)
+    async def query_insight(self, query: str, user_id: int, session_id: str):
 
-        # chat_obj = ChatMessageCreate(
-        #     user_id=user_id,
-        #     role=ChatRoleEnum.USER,
-        #     content=query,
-        # )
+        print(f"Querying insight for user_id: {user_id} with session_id: {session_id}")
+        print(f"LLM Provider: {settings.LLM_PROVIDER}")
+
+        # Validate session before starting the stream
+        if not self.crud_session.get_session_by_session_id(
+            session_id=session_id, user_id=user_id
+        ):
+            raise MissingResource(message="Session ID not found")
+
+        # Save user message
+        chat_obj = ChatMessageCreate(
+            user_id=user_id,
+            role=ChatRoleEnum.USER,
+            content=query,
+            session_id=session_id,
+        )
+        self.crud_chat.create(chat_obj)
+
+        # Call NL resolve endpoint
         response = await self.http_client.post(
             "/nl/resolve",
             json={"query": query, "user_id": user_id},
             headers={"monetra-ai-key": settings.BACKEND_HEADER},
-            params={"llm_provider": "groq"},
+            params={"llm_provider": settings.LLM_PROVIDER},
         )
         # response.raise_for_status()
         rsp = NLResolveResult(**response.json())
@@ -101,18 +114,30 @@ class AIInsightService:
         }
         print("Total amount:", float(amount))
 
+        # Stream the response
         async with self.http_client.stream(
             "POST",
             "nl/format",
             json=payload,
             headers={"monetra-ai-key": settings.BACKEND_HEADER},
-            params={"llm_provider": "groq"},
+            params={"llm_provider": settings.LLM_PROVIDER},
         ) as rsp:
             rsp.raise_for_status()
 
+            text = ""
             async for line in rsp.aiter_lines():
                 if not line:
                     continue
                 if line.startswith("data: "):
                     # print("Sending line:", line)
+                    text += line[6:]  # Remove "data: " prefix
                     yield line + " " + "\n\n"
+
+            ai_chat_obj = ChatMessageCreate(
+                user_id=user_id,
+                role=ChatRoleEnum.ASSISTANT,
+                content=text,
+                session_id=session_id,
+                llm_model=settings.LLM_PROVIDER,
+            )
+            self.crud_chat.create(ai_chat_obj)
