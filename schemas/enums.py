@@ -99,3 +99,9 @@ class AccountMethodEnum(str, Enum):
     INVESTMENT = "investment"
     STARTUP = "startup"
     OTHER = "other"
+
+
+class ChatRoleEnum(str, Enum):
+    USER = "user"
+    ASSISTANT = "assistant"
+    SYSTEM = "system"

@@ -1,4 +1,14 @@
-from . import transaction, user, account, currency, category, planner, rules, budget
+from . import (
+    transaction,
+    user,
+    account,
+    currency,
+    category,
+    planner,
+    rules,
+    budget,
+    chat,
+)
 from core.db import engine
 
 

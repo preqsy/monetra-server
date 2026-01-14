@@ -1,6 +1,7 @@
 from decimal import ROUND_HALF_UP, Decimal
 from httpx import AsyncClient
 
+from core.exceptions import InvalidRequest
 from crud.currency import CRUDUserCurrency
 from crud.transaction import CRUDTransaction
 from schemas.ai_schemas import NLResolveResult
@@ -15,7 +16,7 @@ class AIInsightService:
         crud_transaction: CRUDTransaction,
         crud_user_currency: CRUDUserCurrency,
     ):
-        self.http_client = AsyncClient(base_url=settings.AI_SERVICE_URL, timeout=600.0)
+        self.http_client = AsyncClient(base_url=settings.AI_SERVICE_URL, timeout=60.0)
         self.crud_transaction = crud_transaction
         self.crud_user_currency = crud_user_currency
 
@@ -29,6 +30,9 @@ class AIInsightService:
         )
         # response.raise_for_status()
         rsp = NLResolveResult(**response.json())
+
+        if not rsp.ok:
+            raise InvalidRequest()
 
         transactions = self.crud_transaction.get_transaction_by_category_id(
             category_id=rsp.resolved_category_id, user_id=user_id
