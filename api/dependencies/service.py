@@ -7,6 +7,7 @@ from crud.category import (
     get_crud_category,
     get_crud_user_category,
 )
+from crud.chat import get_crud_chat
 from crud.currency import (
     get_crud_currency,
     get_crud_user_currency,
@@ -199,8 +200,10 @@ def get_account_summary_service(
 def get_ai_insight_service(
     crud_transaction=Depends(get_crud_transaction),
     crud_user_currency=Depends(get_crud_user_currency),
+    crud_chat=Depends(get_crud_chat),
 ) -> AIInsightService:
     return AIInsightService(
         crud_transaction=crud_transaction,
         crud_user_currency=crud_user_currency,
+        crud_chat=crud_chat,
     )

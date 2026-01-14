@@ -1,4 +1,4 @@
-from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, String, text
+from sqlalchemy import TIMESTAMP, Boolean, Column, ForeignKey, Integer, String, text
 from core.db import Base
 
 
@@ -24,3 +24,19 @@ class ChatMessage(Base):
         nullable=True,
         onupdate=text("now()"),
     )
+
+
+class Session(Base):
+    __tablename__ = "chat_sessions"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    session_id = Column(String, unique=True, index=True, nullable=False)
+    active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
+    expires_at = Column(TIMESTAMP(timezone=True), nullable=True)

@@ -24,3 +24,12 @@ async def query_insight(
         stream,
         media_type="text/event-stream",
     )
+
+
+@router.get("/create-session", response_model=str)
+async def create_session(
+    current_user: User = Depends(get_current_user),
+    ai_insight_service: AIInsightService = Depends(get_ai_insight_service),
+):
+    session_id = await ai_insight_service.create_session(user_id=current_user.id)
+    return session_id
