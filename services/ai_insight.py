@@ -46,12 +46,6 @@ class AIInsightService:
         print(f"Querying insight for user_id: {user_id} with session_id: {session_id}")
         print(f"LLM Provider: {settings.LLM_PROVIDER}")
 
-        # Validate session before starting the stream
-        if not self.crud_session.get_session_by_session_id(
-            session_id=session_id, user_id=user_id
-        ):
-            raise MissingResource(message="Session ID not found")
-
         # Save user message
         chat_obj = ChatMessageCreate(
             user_id=user_id,
