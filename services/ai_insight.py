@@ -1,13 +1,14 @@
+from datetime import datetime, timedelta, timezone
 from decimal import ROUND_HALF_UP, Decimal
 from uuid import uuid4
 from httpx import AsyncClient
 
 from core.exceptions import InvalidRequest
-from crud.chat import CRUDChat
+from crud.chat import CRUDChat, CRUDSession
 from crud.currency import CRUDUserCurrency
 from crud.transaction import CRUDTransaction
 from schemas.ai_schemas import NLResolveResult
-from schemas.chat import ChatMessageCreate
+from schemas.chat import ChatMessageCreate, SessionChatCreate
 from schemas.enums import ChatRoleEnum
 from utils.currency_conversion import from_minor_units
 from utils.helper import convert_sql_models_to_dict
@@ -20,23 +21,34 @@ class AIInsightService:
         crud_transaction: CRUDTransaction,
         crud_user_currency: CRUDUserCurrency,
         crud_chat: CRUDChat,
+        crud_session: CRUDSession,
     ):
         self.http_client = AsyncClient(base_url=settings.AI_SERVICE_URL, timeout=60.0)
         self.crud_transaction = crud_transaction
         self.crud_user_currency = crud_user_currency
         self.crud_chat = crud_chat
+        self.crud_session = crud_session
 
     async def create_session(self, user_id: int):
-        return str(user_id) + "-" + str(uuid4())
+        session_id = str(user_id) + "-" + str(uuid4())
+        expires_at = datetime.now(timezone.utc) + timedelta(days=30)
+        session_obj = SessionChatCreate(
+            user_id=user_id,
+            session_id=session_id,
+            expires_at=expires_at,
+        )
+        session = self.crud_session.create(session_obj)
+
+        return session
 
     async def query_insight(self, query: str, user_id: int):
         print("Querying AI Insight Service with query:", settings.AI_SERVICE_URL, query)
 
-        chat_obj = ChatMessageCreate(
-            user_id=user_id,
-            role=ChatRoleEnum.USER,
-            content=query,
-        )
+        # chat_obj = ChatMessageCreate(
+        #     user_id=user_id,
+        #     role=ChatRoleEnum.USER,
+        #     content=query,
+        # )
         response = await self.http_client.post(
             "/nl/resolve",
             json={"query": query, "user_id": user_id},

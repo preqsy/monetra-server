@@ -5,6 +5,7 @@ from api.dependencies.authorization import get_current_user
 from api.dependencies.service import get_ai_insight_service
 from models.user import User
 from schemas.ai_schemas import NlRequest, NlResponse
+from schemas.chat import SessionChatResponse
 from services.ai_insight import AIInsightService
 
 router = APIRouter(prefix="/insights", tags=["Insight"])
@@ -26,7 +27,7 @@ async def query_insight(
     )
 
 
-@router.get("/create-session", response_model=str)
+@router.post("/create-session", response_model=SessionChatResponse)
 async def create_session(
     current_user: User = Depends(get_current_user),
     ai_insight_service: AIInsightService = Depends(get_ai_insight_service),

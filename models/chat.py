@@ -37,6 +37,6 @@ class Session(Base):
         nullable=False,
     )
     session_id = Column(String, unique=True, index=True, nullable=False)
-    active = Column(Boolean, default=True, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
     expires_at = Column(TIMESTAMP(timezone=True), nullable=True)

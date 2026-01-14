@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
+from schemas.base import ReturnBaseModel
 from schemas.enums import ChatRoleEnum
 
 
@@ -14,5 +15,9 @@ class ChatMessageCreate(BaseModel):
 class SessionChatCreate(BaseModel):
     user_id: int
     session_id: str
-    active: bool = True
+    is_active: bool = True
     expires_at: datetime | None = None
+
+
+class SessionChatResponse(SessionChatCreate, ReturnBaseModel):
+    pass
