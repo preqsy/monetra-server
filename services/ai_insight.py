@@ -3,7 +3,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from uuid import uuid4
 from httpx import AsyncClient
 
-from core.exceptions import InvalidRequest, MissingResource
+from core.exceptions import InvalidRequest
 from crud.chat import CRUDChat, CRUDSession
 from crud.currency import CRUDUserCurrency
 from crud.transaction import CRUDTransaction
@@ -135,3 +135,7 @@ class AIInsightService:
                 llm_model=settings.LLM_PROVIDER,
             )
             self.crud_chat.create(ai_chat_obj)
+
+    async def get_messages(self, user_id: int):
+        messages = self.crud_chat.get_messages_by_user_id(user_id=user_id)
+        return messages

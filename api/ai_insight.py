@@ -41,3 +41,12 @@ async def create_session(
 ):
     session_id = await ai_insight_service.create_session(user_id=current_user.id)
     return session_id
+
+
+@router.get("/messages")
+async def get_messages(
+    current_user: User = Depends(get_current_user),
+    ai_insight_service: AIInsightService = Depends(get_ai_insight_service),
+):
+    messages = await ai_insight_service.get_messages(user_id=current_user.id)
+    return messages

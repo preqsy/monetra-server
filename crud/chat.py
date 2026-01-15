@@ -5,7 +5,15 @@ from schemas.chat import ChatMessageCreate
 
 
 class CRUDChat(CRUDBase[ChatMessage,]):
-    pass
+    def get_messages_by_user_id(self, user_id: int):
+        messages = (
+            self.db.query(ChatMessage)
+            .filter(ChatMessage.user_id == user_id)
+            .order_by(ChatMessage.created_at.asc())
+            .all()
+        )
+
+        return messages
 
 
 class CRUDSession(CRUDBase[Session]):
