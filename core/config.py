@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     FIREBASE_ADMIN_SDK_JSON_PATH: str = ""
     FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
 
-    ENVIRONMENT: str = "prod"
+    ENVIRONMENT: str = "dev"
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     KAFKA_CONFIG: KafkaConfig = KafkaConfig()
 
     AI_SERVICE_URL: str = "http://localhost:9000"
-    LLM_PROVIDER: str = "groq" if ENVIRONMENT == "dev" else "groq"
+    LLM_PROVIDER: str = "ollama" if ENVIRONMENT == "dev" else "groq"
     BACKEND_HEADER: str = ""
 
     class Config:
