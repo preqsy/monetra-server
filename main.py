@@ -1,4 +1,6 @@
 import logging
+from contextlib import asynccontextmanager
+
 import logfire
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,7 +11,16 @@ from core.externals.firebase.firebase_init import init_firebase
 
 
 logfire.configure(service_name="monetraserver", environment=settings.ENVIRONMENT)
-app = FastAPI()
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    init_firebase()
+    yield
+    producer.flush()
+
+
+app = FastAPI(lifespan=lifespan)
 logfire.instrument_fastapi(app)
 
 origins = ["*"]
@@ -21,17 +32,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# Initialize Firebase on FastAPI startup
-@app.on_event("startup")
-def on_startup():
-    init_firebase()
-
-
-@app.on_event("shutdown")
-def on_shutdown():
-    producer.flush()
 
 
 app.include_router(router)
