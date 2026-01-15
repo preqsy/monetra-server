@@ -62,7 +62,10 @@ class AIInsightService:
             headers={"monetra-ai-key": settings.BACKEND_HEADER},
             params={"llm_provider": settings.LLM_PROVIDER},
         )
-        # response.raise_for_status()
+
+        if response.status_code != 200:
+            raise InvalidRequest()
+
         rsp = NLResolveResult(**response.json())
 
         if not rsp.ok:
