@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from api.dependencies.authorization import get_current_user
 from api.dependencies.service import get_ai_insight_service
 from models.user import User
 from schemas.ai_schemas import NlRequest, NlResponse
+from schemas.chat import SessionChatResponse
 from services.ai_insight import AIInsightService
 
 router = APIRouter(prefix="/insights", tags=["Insight"])
@@ -16,11 +17,36 @@ async def query_insight(
     current_user: User = Depends(get_current_user),
     ai_insight_service: AIInsightService = Depends(get_ai_insight_service),
 ):
-    stream = ai_insight_service.query_insight(
+
+    payload = await ai_insight_service.prepare_insight(
         query=query.query,
         user_id=current_user.id,
+        session_id=query.session_id,
+    )
+    stream = ai_insight_service.query_insight(
+        payload=payload,
+        user_id=current_user.id,
+        session_id=query.session_id,
     )
     return StreamingResponse(
         stream,
         media_type="text/event-stream",
     )
+
+
+@router.post("/create-session", response_model=SessionChatResponse)
+async def create_session(
+    current_user: User = Depends(get_current_user),
+    ai_insight_service: AIInsightService = Depends(get_ai_insight_service),
+):
+    session_id = await ai_insight_service.create_session(user_id=current_user.id)
+    return session_id
+
+
+@router.get("/messages")
+async def get_messages(
+    current_user: User = Depends(get_current_user),
+    ai_insight_service: AIInsightService = Depends(get_ai_insight_service),
+):
+    messages = await ai_insight_service.get_messages(user_id=current_user.id)
+    return messages

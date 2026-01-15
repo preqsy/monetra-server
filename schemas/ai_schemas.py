@@ -60,6 +60,7 @@ class NLResolveResult(BaseModel):
 
 class NlRequest(BaseModel):
     query: str
+    session_id: str
 
 
 class NlResponse(BaseModel):

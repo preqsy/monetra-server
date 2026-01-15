@@ -18,7 +18,9 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id"), nullable=False, index=True
+    )  # TODO: Add CASCADE TO USERS' FOREIGN KEY ALSO TRY TO REMEMBER WHY I DIDN'T
     narration = Column(String, nullable=True)
     amount = Column(BigInteger, nullable=False, default=0)
     amount_in_default = Column(BigInteger, nullable=True, default=0)

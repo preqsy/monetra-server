@@ -14,6 +14,7 @@ import models.transaction
 import models.category
 import models.planner
 import models.rules
+import models.chat
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
