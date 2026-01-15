@@ -11,6 +11,7 @@ from core.externals.firebase.firebase_init import init_firebase
 
 
 logfire.configure(service_name="monetraserver", environment=settings.ENVIRONMENT)
+logfire.info(f"Starting Monetra Server in {settings.ENVIRONMENT} environment...")
 
 
 @asynccontextmanager
