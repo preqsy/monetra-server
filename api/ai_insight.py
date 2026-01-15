@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from api.dependencies.authorization import get_current_user
 from api.dependencies.service import get_ai_insight_service
-from core.exceptions import MissingResource
 from models.user import User
 from schemas.ai_schemas import NlRequest, NlResponse
 from schemas.chat import SessionChatResponse
@@ -18,13 +17,14 @@ async def query_insight(
     current_user: User = Depends(get_current_user),
     ai_insight_service: AIInsightService = Depends(get_ai_insight_service),
 ):
-    if not ai_insight_service.crud_session.get_session_by_session_id(
-        session_id=query.session_id, user_id=current_user.id
-    ):
-        raise MissingResource(message="Session ID not found")
 
-    stream = ai_insight_service.query_insight(
+    payload = await ai_insight_service.prepare_insight(
         query=query.query,
+        user_id=current_user.id,
+        session_id=query.session_id,
+    )
+    stream = ai_insight_service.query_insight(
+        payload=payload,
         user_id=current_user.id,
         session_id=query.session_id,
     )

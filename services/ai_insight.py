@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
 from decimal import ROUND_HALF_UP, Decimal
 from uuid import uuid4
-from httpx import AsyncClient
+from httpx import AsyncClient, HTTPError
 
-from core.exceptions import InvalidRequest
+from core.exceptions import InvalidRequest, MissingResource
 from crud.chat import CRUDChat, CRUDSession
 from crud.currency import CRUDUserCurrency
 from crud.transaction import CRUDTransaction
@@ -41,10 +41,15 @@ class AIInsightService:
 
         return session
 
-    async def query_insight(self, query: str, user_id: int, session_id: str):
+    async def prepare_insight(self, query: str, user_id: int, session_id: str) -> dict:
 
         print(f"Querying insight for user_id: {user_id} with session_id: {session_id}")
         print(f"LLM Provider: {settings.LLM_PROVIDER}")
+
+        if not self.crud_session.get_session_by_session_id(
+            session_id=session_id, user_id=user_id
+        ):
+            raise MissingResource(message="Session ID not found")
 
         # Save user message
         chat_obj = ChatMessageCreate(
@@ -64,12 +69,15 @@ class AIInsightService:
         )
 
         if response.status_code != 200:
-            raise InvalidRequest()
+            raise InvalidRequest(message="Unable to resolve insight query")
 
         rsp = NLResolveResult(**response.json())
 
         if not rsp.ok:
-            raise InvalidRequest()
+            raise InvalidRequest(message="Unable to resolve insight query")
+
+        if rsp.resolved_category_id is None:
+            raise InvalidRequest(message="No category resolved for the query")
 
         transactions = self.crud_transaction.get_transaction_by_category_id(
             category_id=rsp.resolved_category_id, user_id=user_id
@@ -100,44 +108,53 @@ class AIInsightService:
         )
         print("Currency code:", currency_code)
 
+        target_text = query
+        if rsp.parse and rsp.parse.target_text:
+            target_text = rsp.parse.target_text
+
         payload = {
             "category": (
                 rsp.resolved_candidates[0].category
                 if len(rsp.resolved_candidates) > 0
-                else rsp.parse.target_text
+                else target_text
             ),
             "amount": float((amount)),
             "currency": currency_code,
         }
         print("Total amount:", float(amount))
+        return payload
 
+    async def query_insight(self, payload: dict, user_id: int, session_id: str):
         # Stream the response
-        async with self.http_client.stream(
-            "POST",
-            "nl/format",
-            json=payload,
-            headers={"monetra-ai-key": settings.BACKEND_HEADER},
-            params={"llm_provider": settings.LLM_PROVIDER},
-        ) as rsp:
-            rsp.raise_for_status()
+        try:
+            async with self.http_client.stream(
+                "POST",
+                "nl/format",
+                json=payload,
+                headers={"monetra-ai-key": settings.BACKEND_HEADER},
+                params={"llm_provider": settings.LLM_PROVIDER},
+            ) as rsp:
+                rsp.raise_for_status()
 
-            text = ""
-            async for line in rsp.aiter_lines():
-                if not line:
-                    continue
-                if line.startswith("data: "):
-                    # print("Sending line:", line)
-                    text += line[6:]  # Remove "data: " prefix
-                    yield line + " " + "\n\n"
+                text = ""
+                async for line in rsp.aiter_lines():
+                    if not line:
+                        continue
+                    if line.startswith("data: "):
+                        # print("Sending line:", line)
+                        text += line[6:]  # Remove "data: " prefix
+                        yield line + " " + "\n\n"
 
-            ai_chat_obj = ChatMessageCreate(
-                user_id=user_id,
-                role=ChatRoleEnum.ASSISTANT,
-                content=text,
-                session_id=session_id,
-                llm_model=settings.LLM_PROVIDER,
-            )
-            self.crud_chat.create(ai_chat_obj)
+                ai_chat_obj = ChatMessageCreate(
+                    user_id=user_id,
+                    role=ChatRoleEnum.ASSISTANT,
+                    content=text,
+                    session_id=session_id,
+                    llm_model=settings.LLM_PROVIDER,
+                )
+                self.crud_chat.create(ai_chat_obj)
+        except HTTPError:
+            yield "data: Unable to format insight response.\n\n"
 
     async def get_messages(self, user_id: int):
         messages = self.crud_chat.get_messages_by_user_id(user_id=user_id)
