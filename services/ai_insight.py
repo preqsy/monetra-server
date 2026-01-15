@@ -3,6 +3,8 @@ from decimal import ROUND_HALF_UP, Decimal
 from uuid import uuid4
 from httpx import AsyncClient, HTTPError
 
+import logfire
+
 from core.exceptions import InvalidRequest, MissingResource
 from crud.chat import CRUDChat, CRUDSession
 from crud.currency import CRUDUserCurrency
@@ -43,12 +45,14 @@ class AIInsightService:
 
     async def prepare_insight(self, query: str, user_id: int, session_id: str) -> dict:
 
-        print(f"Querying insight for user_id: {user_id} with session_id: {session_id}")
-        print(f"LLM Provider: {settings.LLM_PROVIDER}")
+        logfire.info(f"Using: {settings.LLM_PROVIDER} from the backend")
 
         if not self.crud_session.get_session_by_session_id(
             session_id=session_id, user_id=user_id
         ):
+            logfire.warning(
+                f"Session ID not found for user_id: {user_id} with session_id: {session_id}"
+            )
             raise MissingResource(message="Session ID not found")
 
         # Save user message
@@ -106,7 +110,6 @@ class AIInsightService:
             amount_minor=total_transactions_amount,
             currency=currency_code,
         )
-        print("Currency code:", currency_code)
 
         target_text = query
         if rsp.parse and rsp.parse.target_text:
@@ -121,7 +124,7 @@ class AIInsightService:
             "amount": float((amount)),
             "currency": currency_code,
         }
-        print("Total amount:", float(amount))
+        logfire.info(f"Prepared insight payload: {payload} for user_id: {user_id}")
         return payload
 
     async def query_insight(self, payload: dict, user_id: int, session_id: str):

@@ -1,13 +1,16 @@
 import logging
+import logfire
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api import router
 from services.kafka_producer import producer
-
+from core import settings
 from core.externals.firebase.firebase_init import init_firebase
 
 
+logfire.configure(service_name="monetraserver", environment=settings.ENVIRONMENT)
 app = FastAPI()
+logfire.instrument_fastapi(app)
 
 origins = ["*"]
 
