@@ -23,10 +23,10 @@ class Settings(BaseSettings):
     FIREBASE_ADMIN_SDK_JSON_PATH: str = ""
     FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
 
-    ENVIRONMENT: str = "dev"
+    ENVIRONMENT: str = "prod"
 
     REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
+    REDIS_PORT: int = 6380
     REDIS_PASSWORD: str = ""
 
     PLAID_CLIENT_ID: str = ""

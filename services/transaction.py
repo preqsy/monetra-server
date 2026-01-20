@@ -1,6 +1,6 @@
 from datetime import date, datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from arq import ArqRedis
 from sqlalchemy import Column
 from core.exceptions import MissingResource
@@ -12,14 +12,13 @@ from crud.category import CRUDCategory, CRUDUserCategory
 from crud.currency import CRUDUserCurrency
 from crud.rules import CRUDRules
 from crud.transaction import CRUDTransaction
-from models.account import Account
-from models.category import Category, UserCategory
+from models.category import Category
 from models.currency import UserCurrency
 from models.kafka_models import TransactionDoc
 from models.rules import TransactionRule
 from models.transaction import Transaction
 from schemas.account import MonoAccountCreate
-from schemas.enums import AccountTypeEnum, MonoTransactionTypeEnum, TransactionTypeEnum
+from schemas.enums import MonoTransactionTypeEnum, TransactionTypeEnum
 from schemas.transaction import MonoTransactionCreate, TransactionCreate
 from services.account import AccountService
 from services.category import CategoryService

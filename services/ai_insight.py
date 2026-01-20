@@ -9,7 +9,7 @@ from core.exceptions import InvalidRequest, MissingResource
 from crud.chat import CRUDChat, CRUDSession
 from crud.currency import CRUDUserCurrency
 from crud.transaction import CRUDTransaction
-from schemas.ai_schemas import NLResolveResult
+from schemas.ai_schemas import Interpretation, NLResolveResult
 from schemas.chat import ChatMessageCreate, SessionChatCreate
 from schemas.enums import ChatRoleEnum
 from utils.currency_conversion import from_minor_units
@@ -42,6 +42,32 @@ class AIInsightService:
         session = self.crud_session.create(session_obj)
 
         return session
+
+    async def interpret_insight(self, query: str, user_id: int, session_id: str):
+        response = await self.http_client.post(
+            "/nl/interpret",
+            json={"query": query, "user_id": user_id},
+            headers={"monetra-ai-key": settings.BACKEND_HEADER},
+            params={"llm_provider": settings.LLM_PROVIDER},
+        )
+
+        if response.status_code != 200:
+            raise InvalidRequest(message="Unable to interpret insight query")
+
+        rsp = Interpretation(**response.json())
+        logfire.info(
+            f"Interpretation response: intent={rsp.delta}, explanation_request={rsp.explanation_request} for user_id: {user_id}"
+        )
+        stream = None
+        if rsp.explanation_request == False and rsp.delta.intent != None:
+            payload = await self.prepare_insight(
+                query=query, user_id=user_id, session_id=session_id
+            )
+            stream = self.query_insight(
+                payload=payload, user_id=user_id, session_id=session_id
+            )
+
+        return stream
 
     async def prepare_insight(self, query: str, user_id: int, session_id: str) -> dict:
 

@@ -1,6 +1,7 @@
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import Enum
 
 from schemas.enums import TransactionTypeEnum
 
@@ -65,3 +66,52 @@ class NlRequest(BaseModel):
 
 class NlResponse(BaseModel):
     message: str
+
+
+# class TimeRangeType(str, Enum):
+#     day = "day"
+#     week = "week"
+#     month = "month"
+#     year = "year"
+#     custom = "custom"
+
+
+# class TimeRange(BaseModel):
+#     # model_config = ConfigDict(extra="forbid")
+
+#     type: TimeRangeType
+#     value: Optional[str] = (
+#         None  # e.g. "this_month", "last_month", "2026-01-01..2026-01-15", etc.
+#     )
+
+
+class QueryDelta(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    intent: Optional[str] = None
+    target_kind: Optional[TargetKind] = None
+    target_reference: Optional[str] = (
+        None  # natural-language reference; backend resolves to IDs
+    )
+    # time_range: Optional[TimeRange] = None
+    currency_mode: Optional[str] = None  # e.g. "EUR", "USD", "BASE"
+    grouping: Optional[str] = None  # e.g. "category", "merchant", "day"
+
+
+class Ambiguity(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    present: bool
+    reason: Optional[str] = None
+
+
+class Interpretation(BaseModel):
+    """
+    LLM output envelope. Backend owns routing/decisions; this is advisory structure only.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    explanation_request: bool
+    delta: Optional[QueryDelta] = None
+    ambiguity: Optional[Ambiguity] = None

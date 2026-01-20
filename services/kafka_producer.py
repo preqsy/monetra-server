@@ -1,20 +1,12 @@
 import tempfile
 import threading
-import logging
 from confluent_kafka import Producer
 import json
 from confluent_kafka import Producer
 from core import settings
 from base64 import b64decode
 
-
-if not logging.getLogger().handlers:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s - %(message)s",
-    )
-
-logger = logging.getLogger("producer")
+import logfire
 
 
 # Write certs to temp files
@@ -45,17 +37,17 @@ producer = Producer(kafka_config)
 
 
 def publish(topic: str, event: dict):
-    logger.info(f"Publishing message to topic: {topic}")
+    logfire.info(f"Publishing message to topic: {topic}")
     try:
         producer.produce(
             topic=topic,
             key=str(event["user_id"]).encode(),
             value=json.dumps(event).encode(),
         )
-        logger.debug(f"Successfully published message: {event}")
+        logfire.debug(f"Successfully published message: {event}")
     except Exception as e:
         print(f"*****Error: {str(e)}")
-        logger.error(f"Failed to publish message: {str(e)}")
+        logfire.error(f"Failed to publish message: {str(e)}")
         raise
 
 
