@@ -58,7 +58,7 @@ class AIInsightService:
         logfire.info(
             f"Interpretation response: intent={rsp.delta}, explanation_request={rsp.explanation_request} for user_id: {user_id}"
         )
-        stream = None
+
         if rsp.explanation_request == False and rsp.delta.intent != None:
             payload = await self.prepare_insight(
                 query=query, user_id=user_id, session_id=session_id
@@ -66,6 +66,8 @@ class AIInsightService:
             stream = self.query_insight(
                 payload=payload, user_id=user_id, session_id=session_id
             )
+        else:
+            stream = self.explain_insight(query=query, user_id=user_id)
 
         return stream
 
@@ -82,13 +84,13 @@ class AIInsightService:
             raise MissingResource(message="Session ID not found")
 
         # Save user message
-        chat_obj = ChatMessageCreate(
+        await self.save_message(
             user_id=user_id,
-            role=ChatRoleEnum.USER,
             content=query,
+            role=ChatRoleEnum.USER,
             session_id=session_id,
+            llm_model=settings.LLM_PROVIDER,
         )
-        self.crud_chat.create(chat_obj)
 
         # Call NL resolve endpoint
         response = await self.http_client.post(
@@ -174,17 +176,57 @@ class AIInsightService:
                         text += line[6:]  # Remove "data: " prefix
                         yield line + " " + "\n\n"
 
-                ai_chat_obj = ChatMessageCreate(
+                await self.save_message(
                     user_id=user_id,
-                    role=ChatRoleEnum.ASSISTANT,
                     content=text,
+                    role=ChatRoleEnum.ASSISTANT,
                     session_id=session_id,
                     llm_model=settings.LLM_PROVIDER,
                 )
-                self.crud_chat.create(ai_chat_obj)
         except HTTPError:
             yield "data: Unable to format insight response.\n\n"
+
+    async def explain_insight(self, query: str, user_id: int):
+        try:
+            async with self.http_client.stream(
+                "POST",
+                "nl/explain",
+                json={"query": query, "user_id": user_id},
+                headers={"monetra-ai-key": settings.BACKEND_HEADER},
+                params={"llm_provider": settings.LLM_PROVIDER},
+            ) as rsp:
+                rsp.raise_for_status()
+
+                text = ""
+                async for line in rsp.aiter_lines():
+                    if not line:
+                        continue
+                    if line.startswith("data: "):
+                        text += line[6:]
+                        yield line + " " + "\n\n"
+
+        except HTTPError:
+            rsp = "data: Unable to explain insight response.\n\n"
+            yield rsp
 
     async def get_messages(self, user_id: int):
         messages = self.crud_chat.get_messages_by_user_id(user_id=user_id)
         return messages
+
+    async def save_message(
+        self,
+        user_id: int,
+        content: str,
+        role: ChatRoleEnum,
+        session_id: str,
+        llm_model: str,
+    ):
+        message_obj = ChatMessageCreate(
+            user_id=user_id,
+            content=content,
+            role=role,
+            session_id=session_id,
+            llm_model=llm_model,
+        )
+        chat = self.crud_chat.create(message_obj)
+        return chat

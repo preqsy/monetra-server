@@ -68,23 +68,6 @@ class NlResponse(BaseModel):
     message: str
 
 
-# class TimeRangeType(str, Enum):
-#     day = "day"
-#     week = "week"
-#     month = "month"
-#     year = "year"
-#     custom = "custom"
-
-
-# class TimeRange(BaseModel):
-#     # model_config = ConfigDict(extra="forbid")
-
-#     type: TimeRangeType
-#     value: Optional[str] = (
-#         None  # e.g. "this_month", "last_month", "2026-01-01..2026-01-15", etc.
-#     )
-
-
 class QueryDelta(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -93,9 +76,8 @@ class QueryDelta(BaseModel):
     target_reference: Optional[str] = (
         None  # natural-language reference; backend resolves to IDs
     )
-    # time_range: Optional[TimeRange] = None
-    currency_mode: Optional[str] = None  # e.g. "EUR", "USD", "BASE"
-    grouping: Optional[str] = None  # e.g. "category", "merchant", "day"
+    currency_mode: Optional[str] = None
+    grouping: Optional[str] = None
 
 
 class Ambiguity(BaseModel):
