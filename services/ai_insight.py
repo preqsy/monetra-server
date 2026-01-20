@@ -47,10 +47,18 @@ class AIInsightService:
 
         return session
 
-    async def interpret_insight(self, query: str, user_id: int, session_id: str):
+    async def interpret_insight(
+        self,
+        query: str,
+        user_id: int,
+        session_id: str,
+    ):
+        query_plan = await self.get_last_query_plan(
+            user_id=user_id, session_id=session_id
+        )
         response = await self.http_client.post(
             "/nl/interpret",
-            json={"query": query, "user_id": user_id},
+            json={"query": query, "user_id": user_id, "query_plan": query_plan},
             headers={"monetra-ai-key": settings.BACKEND_HEADER},
             params={"llm_provider": settings.LLM_PROVIDER},
         )
@@ -59,13 +67,8 @@ class AIInsightService:
             raise InvalidRequest(message="Unable to interpret insight query")
 
         rsp = Interpretation(**response.json())
-        logfire.info(
-            f"Interpretation response: intent={rsp.delta}, explanation_request={rsp.explanation_request} for user_id: {user_id}"
-        )
-        query_plan = await self.get_last_query_plan(
-            user_id=user_id, session_id=session_id
-        )
-        if rsp.explanation_request == False and rsp.delta.intent != None:
+
+        if rsp.explanation_request == False and rsp.delta.target_kind != None:
             logfire.info(
                 f"Querying insight for user_id: {user_id} with explanation_request={rsp.explanation_request} and intent={rsp.delta.intent}"
             )
