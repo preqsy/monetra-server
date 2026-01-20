@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta, timezone
 from decimal import ROUND_HALF_UP, Decimal
+import json
 from uuid import uuid4
 from httpx import AsyncClient, HTTPError
 
 import logfire
+from redis import Redis
 
 from core.exceptions import InvalidRequest, MissingResource
 from crud.chat import CRUDChat, CRUDSession
@@ -24,12 +26,14 @@ class AIInsightService:
         crud_user_currency: CRUDUserCurrency,
         crud_chat: CRUDChat,
         crud_session: CRUDSession,
+        redis_client: Redis,
     ):
         self.http_client = AsyncClient(base_url=settings.AI_SERVICE_URL, timeout=600.0)
         self.crud_transaction = crud_transaction
         self.crud_user_currency = crud_user_currency
         self.crud_chat = crud_chat
         self.crud_session = crud_session
+        self.redis_client = redis_client
 
     async def create_session(self, user_id: int):
         session_id = str(user_id) + "-" + str(uuid4())
@@ -58,16 +62,30 @@ class AIInsightService:
         logfire.info(
             f"Interpretation response: intent={rsp.delta}, explanation_request={rsp.explanation_request} for user_id: {user_id}"
         )
-
+        query_plan = await self.get_last_query_plan(
+            user_id=user_id, session_id=session_id
+        )
         if rsp.explanation_request == False and rsp.delta.intent != None:
+            logfire.info(
+                f"Querying insight for user_id: {user_id} with explanation_request={rsp.explanation_request} and intent={rsp.delta.intent}"
+            )
             payload = await self.prepare_insight(
                 query=query, user_id=user_id, session_id=session_id
             )
+
             stream = self.query_insight(
                 payload=payload, user_id=user_id, session_id=session_id
             )
         else:
-            stream = self.explain_insight(query=query, user_id=user_id)
+            logfire.info(
+                f"Generating explanation for user_id: {user_id} with explanation_request={rsp.explanation_request}"
+            )
+            stream = self.explain_insight(
+                query=query,
+                user_id=user_id,
+                query_plan=query_plan,
+                session_id=session_id,
+            )
 
         return stream
 
@@ -110,6 +128,12 @@ class AIInsightService:
 
         if rsp.resolved_category_id is None:
             raise InvalidRequest(message="No category resolved for the query")
+
+        self.redis_client.set(
+            f"ai_insight:{user_id}:{session_id}",
+            json.dumps(rsp.parse.model_dump()),
+            ex=3600,
+        )
 
         transactions = self.crud_transaction.get_transaction_by_category_id(
             category_id=rsp.resolved_category_id, user_id=user_id
@@ -186,12 +210,28 @@ class AIInsightService:
         except HTTPError:
             yield "data: Unable to format insight response.\n\n"
 
-    async def explain_insight(self, query: str, user_id: int):
+    async def explain_insight(
+        self, query: str, user_id: int, query_plan: dict, session_id: str
+    ):
+        messages = await self.get_message_history_for_ai_context(
+            user_id=user_id, session_id=session_id
+        )
+        # messages = [str(m.created_at) for m in messages]
+        # print(f"Fetched {len(messages)} messages for AI context {messages}")
+        message_list = [convert_sql_models_to_dict(m) for m in messages]
+        for m in message_list:
+            m["created_at"] = m["created_at"].isoformat()
+
         try:
             async with self.http_client.stream(
                 "POST",
                 "nl/explain",
-                json={"query": query, "user_id": user_id},
+                json={
+                    "query": query,
+                    "user_id": user_id,
+                    "query_plan": query_plan,
+                    "message_list": message_list,
+                },
                 headers={"monetra-ai-key": settings.BACKEND_HEADER},
                 params={"llm_provider": settings.LLM_PROVIDER},
             ) as rsp:
@@ -212,6 +252,20 @@ class AIInsightService:
     async def get_messages(self, user_id: int):
         messages = self.crud_chat.get_messages_by_user_id(user_id=user_id)
         return messages
+
+    async def get_message_history_for_ai_context(self, user_id: int, session_id: str):
+        messages = self.crud_chat.get_messages_by_user_id_and_session_id(
+            user_id=user_id, session_id=session_id
+        )
+        return messages
+
+    async def get_last_query_plan(self, user_id: int, session_id: str):
+        query_plan_json = self.redis_client.get(f"ai_insight:{user_id}:{session_id}")
+        if query_plan_json:
+            query_plan = json.loads(query_plan_json)
+            print(f"Retrieved query plan from Redis: {query_plan}")
+            return query_plan
+        return None
 
     async def save_message(
         self,

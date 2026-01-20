@@ -5,6 +5,7 @@ import logfire
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api import router
+from core.redis import close_redis, init_redis_client
 from services.kafka_producer import producer
 from core import settings
 from core.externals.firebase.firebase_init import init_firebase
@@ -17,8 +18,10 @@ logfire.info(f"Starting Monetra Server in {settings.ENVIRONMENT} environment..."
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_firebase()
+    init_redis_client()
     yield
     producer.flush()
+    close_redis()
 
 
 app = FastAPI(lifespan=lifespan)

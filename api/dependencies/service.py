@@ -1,5 +1,6 @@
 from core.externals.mono.mono_client import get_mono_client
 from core.externals.plaid.plaid_client import get_plaid_client
+from core.redis import get_redis_client
 from crud.account import get_crud_account
 from fastapi.params import Depends
 from crud.budget import get_crud_budget
@@ -202,10 +203,12 @@ def get_ai_insight_service(
     crud_user_currency=Depends(get_crud_user_currency),
     crud_chat=Depends(get_crud_chat),
     crud_session=Depends(get_crud_session),
+    redis_client=Depends(get_redis_client),
 ) -> AIInsightService:
     return AIInsightService(
         crud_transaction=crud_transaction,
         crud_user_currency=crud_user_currency,
         crud_chat=crud_chat,
         crud_session=crud_session,
+        redis_client=redis_client,
     )
