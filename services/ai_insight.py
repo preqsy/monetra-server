@@ -56,9 +56,17 @@ class AIInsightService:
         query_plan = await self.get_last_query_plan(
             user_id=user_id, session_id=session_id
         )
+        # results = await self.get_transactions_for_insight(
+        #     user_id=user_id, session_id=session_id
+        # )
+        print(f"Last query plan: {query_plan}")
         response = await self.http_client.post(
             "/nl/interpret",
-            json={"query": query, "user_id": user_id, "query_plan": query_plan},
+            json={
+                "query": query,
+                "user_id": user_id,
+                "query_plan": query_plan,
+            },
             headers={"monetra-ai-key": settings.BACKEND_HEADER},
             params={"llm_provider": settings.LLM_PROVIDER},
         )
@@ -92,10 +100,8 @@ class AIInsightService:
 
         return stream
 
-    async def prepare_insight(self, query: str, user_id: int, session_id: str) -> dict:
-
-        logfire.info(f"Using: {settings.LLM_PROVIDER} from the backend")
-
+    async def _validate_session(self, user_id: int, session_id: str) -> None:
+        """Validate that the session exists for the user."""
         if not self.crud_session.get_session_by_session_id(
             session_id=session_id, user_id=user_id
         ):
@@ -104,16 +110,8 @@ class AIInsightService:
             )
             raise MissingResource(message="Session ID not found")
 
-        # Save user message
-        await self.save_message(
-            user_id=user_id,
-            content=query,
-            role=ChatRoleEnum.USER,
-            session_id=session_id,
-            llm_model=settings.LLM_PROVIDER,
-        )
-
-        # Call NL resolve endpoint
+    async def _resolve_query(self, query: str, user_id: int) -> NLResolveResult:
+        """Call the NL resolve endpoint and return the result."""
         response = await self.http_client.post(
             "/nl/resolve",
             json={"query": query, "user_id": user_id},
@@ -132,18 +130,83 @@ class AIInsightService:
         if rsp.resolved_category_id is None:
             raise InvalidRequest(message="No category resolved for the query")
 
+        return rsp
+
+    def _cache_resolve_result(
+        self, rsp: NLResolveResult, user_id: int, session_id: str
+    ) -> None:
+        """Cache the resolve result in Redis."""
         self.redis_client.set(
             f"ai_insight:{user_id}:{session_id}",
-            json.dumps(rsp.parse.model_dump()),
+            json.dumps(rsp.model_dump()),
             ex=3600,
         )
 
+    def _serialize_transaction_dates(self, tx: dict) -> None:
+        """Convert datetime objects in transaction to ISO format strings."""
+        tx["created_at"] = tx["created_at"].isoformat()
+        tx["updated_at"] = tx["updated_at"].isoformat() if tx["updated_at"] else None
+        tx["date"] = tx["date"].isoformat() if tx["date"] else None
+        tx["category"]["created_at"] = tx["category"]["created_at"].isoformat()
+        tx["category"]["updated_at"] = (
+            tx["category"]["updated_at"].isoformat()
+            if tx["category"]["updated_at"]
+            else None
+        )
+        tx["user_currency"]["created_at"] = tx["user_currency"][
+            "created_at"
+        ].isoformat()
+        tx["user_currency"]["updated_at"] = (
+            tx["user_currency"]["updated_at"].isoformat()
+            if tx["user_currency"]["updated_at"]
+            else None
+        )
+
+        tx["user_currency"]["currency"]["created_at"] = tx["user_currency"]["currency"][
+            "created_at"
+        ].isoformat()
+        tx["user_currency"]["currency"]["updated_at"] = (
+            tx["user_currency"]["currency"]["updated_at"].isoformat()
+            if tx["user_currency"]["currency"]["updated_at"]
+            else None
+        )
+        tx["account"]["created_at"] = tx["account"]["created_at"].isoformat()
+        tx["account"]["updated_at"] = (
+            tx["account"]["updated_at"].isoformat()
+            if tx["account"]["updated_at"]
+            else None
+        )
+
+    def _fetch_and_prepare_transactions(
+        self, category_id: int, user_id: int, session_id: str
+    ) -> list[dict]:
+        """Fetch transactions and prepare them for caching."""
         transactions = self.crud_transaction.get_transaction_by_category_id(
-            category_id=rsp.resolved_category_id, user_id=user_id
+            category_id=category_id, user_id=user_id
         )
 
         transactions = [convert_sql_models_to_dict(tx) for tx in transactions]
-        total_transactions_amount = 0
+
+        # print(
+        #     f"Transactions to be cached: {transactions[0] if transactions else 'No transactions'}"
+        # )
+
+        for tx in transactions:
+            self._serialize_transaction_dates(tx)
+
+        # print(f"Type of date: {type(transactions[0]['created_at'])}")
+        # print(f"Serialized transactions: {transactions}")
+        self.redis_client.set(
+            f"ai_insight:transactions:{user_id}:{session_id}",
+            json.dumps(transactions, default=float),
+            ex=3600,
+        )
+
+        return transactions
+
+    def _calculate_total_amount(self, transactions: list[dict]) -> Decimal:
+        """Calculate the total transaction amount in default currency."""
+        total_transactions_amount = Decimal(0)
 
         for trans in transactions:
             account_currency = trans["user_currency"]["exchange_rate"]
@@ -155,14 +218,28 @@ class AIInsightService:
             )
             total_transactions_amount += trans["amount_in_default"]
 
+        return total_transactions_amount
+
+    def _get_currency_code(self, user_id: int) -> str:
+        """Get the user's default currency code or fallback to USD."""
         default_currency = self.crud_user_currency.get_user_default_currency(user_id)
         currency_code = default_currency.currency.code if default_currency else None
 
         if not currency_code:
             currency_code = "USD"
 
+        return currency_code
+
+    def _build_insight_payload(
+        self,
+        rsp: NLResolveResult,
+        query: str,
+        total_amount: Decimal,
+        currency_code: str,
+    ) -> dict:
+        """Build the final payload for insight query."""
         amount = from_minor_units(
-            amount_minor=total_transactions_amount,
+            amount_minor=total_amount,
             currency=currency_code,
         )
 
@@ -176,9 +253,53 @@ class AIInsightService:
                 if len(rsp.resolved_candidates) > 0
                 else target_text
             ),
-            "amount": float((amount)),
+            "amount": float(amount),
             "currency": currency_code,
         }
+
+        return payload
+
+    async def prepare_insight(self, query: str, user_id: int, session_id: str) -> dict:
+        """Prepare insight payload by resolving query and processing transactions."""
+        logfire.info(f"Using: {settings.LLM_PROVIDER} from the backend")
+
+        # Validate session exists
+        await self._validate_session(user_id, session_id)
+
+        # Save user message
+        await self.save_message(
+            user_id=user_id,
+            content=query,
+            role=ChatRoleEnum.USER,
+            session_id=session_id,
+            llm_model=settings.LLM_PROVIDER,
+        )
+
+        # Resolve the query
+        rsp = await self._resolve_query(query, user_id)
+
+        # Cache the resolve result
+        self._cache_resolve_result(rsp, user_id, session_id)
+
+        # Fetch and prepare transactions
+        transactions = self._fetch_and_prepare_transactions(
+            category_id=rsp.resolved_category_id, user_id=user_id, session_id=session_id
+        )
+
+        # Calculate total amount
+        total_transactions_amount = self._calculate_total_amount(transactions)
+
+        # Get currency code
+        currency_code = self._get_currency_code(user_id)
+
+        # Build payload
+        payload = self._build_insight_payload(
+            rsp=rsp,
+            query=query,
+            total_amount=total_transactions_amount,
+            currency_code=currency_code,
+        )
+
         logfire.info(f"Prepared insight payload: {payload} for user_id: {user_id}")
         return payload
 
@@ -219,8 +340,9 @@ class AIInsightService:
         messages = await self.get_message_history_for_ai_context(
             user_id=user_id, session_id=session_id
         )
-        # messages = [str(m.created_at) for m in messages]
-        # print(f"Fetched {len(messages)} messages for AI context {messages}")
+        results = await self.get_transactions_for_insight(
+            user_id=user_id, session_id=session_id
+        )
         message_list = [convert_sql_models_to_dict(m) for m in messages]
         for m in message_list:
             m["created_at"] = m["created_at"].isoformat()
@@ -234,6 +356,7 @@ class AIInsightService:
                     "user_id": user_id,
                     "query_plan": query_plan,
                     "message_list": message_list,
+                    "result_summary": results,
                 },
                 headers={"monetra-ai-key": settings.BACKEND_HEADER},
                 params={"llm_provider": settings.LLM_PROVIDER},
@@ -262,13 +385,21 @@ class AIInsightService:
         )
         return messages
 
-    async def get_last_query_plan(self, user_id: int, session_id: str):
+    async def get_last_query_plan(self, user_id: int, session_id: str) -> dict:
         query_plan_json = self.redis_client.get(f"ai_insight:{user_id}:{session_id}")
         if query_plan_json:
             query_plan = json.loads(query_plan_json)
-            print(f"Retrieved query plan from Redis: {query_plan}")
+            # print(f"Retrieved query plan from Redis: {query_plan}")
             return query_plan
-        return None
+        return {}
+
+    async def get_transactions_for_insight(self, user_id: int, session_id: str):
+        transactions_json = self.redis_client.get(
+            f"ai_insight:transactions:{user_id}:{session_id}"
+        )
+        print(f"Type of transactions_json: {type(transactions_json)}")
+        print(f"Retrieved transactions from Redis: {transactions_json}")
+        return transactions_json if transactions_json else "[]"
 
     async def save_message(
         self,
