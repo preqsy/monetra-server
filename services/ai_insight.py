@@ -56,10 +56,7 @@ class AIInsightService:
         query_plan = await self.get_last_query_plan(
             user_id=user_id, session_id=session_id
         )
-        # results = await self.get_transactions_for_insight(
-        #     user_id=user_id, session_id=session_id
-        # )
-        print(f"Last query plan: {query_plan}")
+
         response = await self.http_client.post(
             "/nl/interpret",
             json={
@@ -179,7 +176,7 @@ class AIInsightService:
 
     def _fetch_and_prepare_transactions(
         self, category_id: int, user_id: int, session_id: str
-    ) -> list[dict]:
+    ) -> tuple[list[dict], Decimal]:
         """Fetch transactions and prepare them for caching."""
         transactions = self.crud_transaction.get_transaction_by_category_id(
             category_id=category_id, user_id=user_id
@@ -187,22 +184,22 @@ class AIInsightService:
 
         transactions = [convert_sql_models_to_dict(tx) for tx in transactions]
 
-        # print(
-        #     f"Transactions to be cached: {transactions[0] if transactions else 'No transactions'}"
-        # )
-
         for tx in transactions:
             self._serialize_transaction_dates(tx)
+        total_transactions_amount = self._calculate_total_amount(transactions)
 
-        # print(f"Type of date: {type(transactions[0]['created_at'])}")
-        # print(f"Serialized transactions: {transactions}")
+        full_payload = {
+            "transactions": transactions,
+            "total_amount_in_default": float(total_transactions_amount),
+        }
+
         self.redis_client.set(
             f"ai_insight:transactions:{user_id}:{session_id}",
-            json.dumps(transactions, default=float),
+            json.dumps(full_payload, default=float),
             ex=3600,
         )
 
-        return transactions
+        return transactions, total_transactions_amount
 
     def _calculate_total_amount(self, transactions: list[dict]) -> Decimal:
         """Calculate the total transaction amount in default currency."""
@@ -217,7 +214,7 @@ class AIInsightService:
                 Decimal("0.01"), rounding=ROUND_HALF_UP
             )
             total_transactions_amount += trans["amount_in_default"]
-
+        print(f"Total transactions amount: {total_transactions_amount}")
         return total_transactions_amount
 
     def _get_currency_code(self, user_id: int) -> str:
@@ -282,12 +279,12 @@ class AIInsightService:
         self._cache_resolve_result(rsp, user_id, session_id)
 
         # Fetch and prepare transactions
-        transactions = self._fetch_and_prepare_transactions(
+        transactions, total_transactions_amount = self._fetch_and_prepare_transactions(
             category_id=rsp.resolved_category_id, user_id=user_id, session_id=session_id
         )
 
         # Calculate total amount
-        total_transactions_amount = self._calculate_total_amount(transactions)
+        # total_transactions_amount = self._calculate_total_amount(transactions)
 
         # Get currency code
         currency_code = self._get_currency_code(user_id)
@@ -347,6 +344,8 @@ class AIInsightService:
         for m in message_list:
             m["created_at"] = m["created_at"].isoformat()
 
+        message_list_json = json.dumps(message_list)
+
         try:
             async with self.http_client.stream(
                 "POST",
@@ -355,7 +354,7 @@ class AIInsightService:
                     "query": query,
                     "user_id": user_id,
                     "query_plan": query_plan,
-                    "message_list": message_list,
+                    "message_list": message_list_json,
                     "result_summary": results,
                 },
                 headers={"monetra-ai-key": settings.BACKEND_HEADER},
@@ -385,20 +384,15 @@ class AIInsightService:
         )
         return messages
 
-    async def get_last_query_plan(self, user_id: int, session_id: str) -> dict:
+    async def get_last_query_plan(self, user_id: int, session_id: str):
         query_plan_json = self.redis_client.get(f"ai_insight:{user_id}:{session_id}")
-        if query_plan_json:
-            query_plan = json.loads(query_plan_json)
-            # print(f"Retrieved query plan from Redis: {query_plan}")
-            return query_plan
-        return {}
+        return query_plan_json if query_plan_json else "{}"
 
     async def get_transactions_for_insight(self, user_id: int, session_id: str):
         transactions_json = self.redis_client.get(
             f"ai_insight:transactions:{user_id}:{session_id}"
         )
-        print(f"Type of transactions_json: {type(transactions_json)}")
-        print(f"Retrieved transactions from Redis: {transactions_json}")
+
         return transactions_json if transactions_json else "[]"
 
     async def save_message(
