@@ -124,13 +124,14 @@ class AIInsightService:
         # Cache the resolve result
         self._cache_resolve_result(rsp, user_id, session_id)
 
+        currency_code = self._get_currency_code(user_id=user_id)
         # Fetch and prepare transactions
         _, total_transactions_amount = self._fetch_and_prepare_transactions(
-            category_id=rsp.resolved_category_id, user_id=user_id, session_id=session_id
+            category_id=rsp.resolved_category_id,
+            user_id=user_id,
+            session_id=session_id,
+            currency_code=currency_code,
         )
-
-        # Get currency code
-        currency_code = self._get_currency_code(user_id)
 
         # Build payload
         payload = self._build_insight_payload(
@@ -180,7 +181,10 @@ class AIInsightService:
         messages = await self.get_message_history_for_ai_context(
             user_id=user_id, session_id=session_id
         )
-        results = await self.get_transactions_for_insight(
+        results = await self.get_transactions_result_summary_for_insight(
+            user_id=user_id, session_id=session_id
+        )
+        calculation_trace = await self.get_calulation_trace_for_insight(
             user_id=user_id, session_id=session_id
         )
         message_list = [convert_sql_models_to_dict(m) for m in messages]
@@ -199,6 +203,7 @@ class AIInsightService:
                     "query_plan": query_plan,
                     "message_list": message_list_json,
                     "result_summary": results,
+                    "calculation_trace": calculation_trace,
                 },
                 headers={"monetra-ai-key": settings.BACKEND_HEADER},
                 params={"llm_provider": settings.LLM_PROVIDER},
@@ -264,13 +269,17 @@ class AIInsightService:
     ) -> None:
         """Cache the resolve result in Redis."""
         self.redis_client.set(
-            f"ai_insight:{user_id}:{session_id}",
-            json.dumps(rsp.model_dump()),
+            f"cache:user:{user_id}:session:{session_id}:query_plan",
+            json.dumps(rsp.parse.model_dump()),
             ex=3600,
         )
 
     def _fetch_and_prepare_transactions(
-        self, category_id: int, user_id: int, session_id: str
+        self,
+        category_id: int,
+        user_id: int,
+        session_id: str,
+        currency_code: str,
     ) -> tuple[list[dict], Decimal]:
         """Fetch transactions and prepare them for caching."""
         transactions = self.crud_transaction.get_transaction_by_category_id(
@@ -279,27 +288,51 @@ class AIInsightService:
 
         transactions = [convert_sql_models_to_dict(tx) for tx in transactions]
 
+        transactions.sort(key=lambda x: x["created_at"], reverse=False)
         for tx in transactions:
             serialize_transaction_dates(tx)
-        total_transactions_amount = self._calculate_total_amount(transactions)
+        total_transactions_amount = self._calculate_total_amount(
+            transactions, user_id=user_id
+        )
 
+        transactions_count = len(transactions)
+
+        calculation_trace = {
+            "transactions_count": transactions_count,
+            "currency": currency_code,
+            "date_range": {
+                "from": transactions[0]["created_at"] if transactions else None,
+                "to": transactions[-1]["created_at"] if transactions else None,
+            },
+            "operation": "sum",
+            "metric": "total_spent",
+        }
+
+        print("Calculation trace:", calculation_trace)
         full_payload = {
             "transactions": transactions,
             "total_amount_in_default": float(total_transactions_amount),
         }
 
         self.redis_client.set(
-            f"ai_insight:transactions:{user_id}:{session_id}",
+            f"cache:user:{user_id}:session:{session_id}:result_summary",
             json.dumps(full_payload, default=float),
+            ex=3600,
+        )
+        self.redis_client.set(
+            f"cache:user:{user_id}:session:{session_id}:calculation_trace",
+            json.dumps(calculation_trace, default=float),
             ex=3600,
         )
 
         return transactions, total_transactions_amount
 
-    def _calculate_total_amount(self, transactions: list[dict]) -> Decimal:
+    def _calculate_total_amount(
+        self, transactions: list[dict], user_id: int
+    ) -> Decimal:
         """Calculate the total transaction amount in default currency."""
         total_transactions_amount = Decimal(0)
-
+        currency_code = self._get_currency_code(user_id=user_id)
         for trans in transactions:
             account_currency = trans["user_currency"]["exchange_rate"]
             amount = Decimal(trans["amount_in_default"])
@@ -309,6 +342,9 @@ class AIInsightService:
                 Decimal("0.01"), rounding=ROUND_HALF_UP
             )
             total_transactions_amount += trans["amount_in_default"]
+        total_transactions_amount = from_minor_units(
+            amount_minor=total_transactions_amount, currency=currency_code
+        )
         print(f"Total transactions amount: {total_transactions_amount}")
         return total_transactions_amount
 
@@ -330,10 +366,6 @@ class AIInsightService:
         currency_code: str,
     ) -> dict:
         """Build the final payload for insight query."""
-        amount = from_minor_units(
-            amount_minor=total_amount,
-            currency=currency_code,
-        )
 
         target_text = query
         if rsp.parse and rsp.parse.target_text:
@@ -345,7 +377,7 @@ class AIInsightService:
                 if len(rsp.resolved_candidates) > 0
                 else target_text
             ),
-            "amount": float(amount),
+            "amount": float(total_amount),
             "currency": currency_code,
         }
 
@@ -362,15 +394,26 @@ class AIInsightService:
         return messages
 
     async def get_last_query_plan(self, user_id: int, session_id: str):
-        query_plan_json = self.redis_client.get(f"ai_insight:{user_id}:{session_id}")
+        query_plan_json = self.redis_client.get(
+            f"cache:user:{user_id}:session:{session_id}:query_plan"
+        )
         return query_plan_json if query_plan_json else "{}"
 
-    async def get_transactions_for_insight(self, user_id: int, session_id: str):
+    async def get_transactions_result_summary_for_insight(
+        self, user_id: int, session_id: str
+    ):
         transactions_json = self.redis_client.get(
-            f"ai_insight:transactions:{user_id}:{session_id}"
+            f"cache:user:{user_id}:session:{session_id}:result_summary"
         )
 
         return transactions_json if transactions_json else "[]"
+
+    async def get_calulation_trace_for_insight(self, user_id: int, session_id: str):
+        trace_json = self.redis_client.get(
+            f"cache:user:{user_id}:session:{session_id}:calculation_trace"
+        )
+
+        return trace_json if trace_json else "{}"
 
     async def save_message(
         self,

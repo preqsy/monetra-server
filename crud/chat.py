@@ -2,6 +2,7 @@ from core.db import get_db
 from crud.base import CRUDBase
 from models.chat import ChatMessage, Session
 from schemas.chat import ChatMessageCreate
+from schemas.enums import ChatRoleEnum
 
 
 class CRUDChat(CRUDBase[ChatMessage,]):
@@ -19,7 +20,9 @@ class CRUDChat(CRUDBase[ChatMessage,]):
         messages = (
             self.db.query(ChatMessage)
             .filter(
-                ChatMessage.user_id == user_id, ChatMessage.session_id == session_id
+                ChatMessage.user_id == user_id,
+                ChatMessage.session_id == session_id,
+                ChatMessage.role == ChatRoleEnum.USER,
             )
             .order_by(ChatMessage.created_at.asc())
             .limit(6)
