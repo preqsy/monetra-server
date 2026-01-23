@@ -57,6 +57,18 @@ class AIInsightService:
             user_id=user_id, session_id=session_id
         )
 
+        # Validate session exists
+        await self._validate_session(user_id, session_id)
+
+        # Save user message
+        await self.save_message(
+            user_id=user_id,
+            content=query,
+            role=ChatRoleEnum.USER,
+            session_id=session_id,
+            llm_model=settings.LLM_PROVIDER,
+        )
+
         response = await self.http_client.post(
             "/nl/interpret",
             json={
@@ -78,7 +90,10 @@ class AIInsightService:
                 f"Querying insight for user_id: {user_id} with explanation_request={rsp.explanation_request} and intent={rsp.delta.intent}"
             )
             payload = await self.prepare_insight(
-                query=query, user_id=user_id, session_id=session_id
+                query=query,
+                user_id=user_id,
+                session_id=session_id,
+                query_plan=rsp.delta.model_dump(),
             )
 
             stream = self.query_insight(
@@ -97,21 +112,126 @@ class AIInsightService:
 
         return stream
 
-    async def _validate_session(self, user_id: int, session_id: str) -> None:
-        """Validate that the session exists for the user."""
-        if not self.crud_session.get_session_by_session_id(
-            session_id=session_id, user_id=user_id
-        ):
-            logfire.warning(
-                f"Session ID not found for user_id: {user_id} with session_id: {session_id}"
-            )
-            raise MissingResource(message="Session ID not found")
+    async def prepare_insight(
+        self, query: str, user_id: int, session_id: str, query_plan: dict
+    ) -> dict:
+        """Prepare insight payload by resolving query and processing transactions."""
+        logfire.info(f"Using: {settings.LLM_PROVIDER} from the backend")
 
-    async def _resolve_query(self, query: str, user_id: int) -> NLResolveResult:
+        # Resolve the query
+        rsp = await self._resolve_query(query, user_id, query_plan)
+
+        # Cache the resolve result
+        self._cache_resolve_result(rsp, user_id, session_id)
+
+        # Fetch and prepare transactions
+        _, total_transactions_amount = self._fetch_and_prepare_transactions(
+            category_id=rsp.resolved_category_id, user_id=user_id, session_id=session_id
+        )
+
+        # Get currency code
+        currency_code = self._get_currency_code(user_id)
+
+        # Build payload
+        payload = self._build_insight_payload(
+            rsp=rsp,
+            query=query,
+            total_amount=total_transactions_amount,
+            currency_code=currency_code,
+        )
+
+        logfire.info(f"Prepared insight payload: {payload} for user_id: {user_id}")
+        return payload
+
+    async def query_insight(self, payload: dict, user_id: int, session_id: str):
+        # Stream the response
+        try:
+            async with self.http_client.stream(
+                "POST",
+                "nl/format",
+                json=payload,
+                headers={"monetra-ai-key": settings.BACKEND_HEADER},
+                params={"llm_provider": settings.LLM_PROVIDER},
+            ) as rsp:
+                rsp.raise_for_status()
+
+                text = ""
+                async for line in rsp.aiter_lines():
+                    if not line:
+                        continue
+                    if line.startswith("data: "):
+                        # print("Sending line:", line)
+                        text += line[6:]  # Remove "data: " prefix
+                        yield line + " " + "\n\n"
+
+                await self.save_message(
+                    user_id=user_id,
+                    content=text,
+                    role=ChatRoleEnum.ASSISTANT,
+                    session_id=session_id,
+                    llm_model=settings.LLM_PROVIDER,
+                )
+        except HTTPError:
+            yield "data: Unable to format insight response.\n\n"
+
+    async def explain_insight(
+        self, query: str, user_id: int, query_plan: dict, session_id: str
+    ):
+        messages = await self.get_message_history_for_ai_context(
+            user_id=user_id, session_id=session_id
+        )
+        results = await self.get_transactions_for_insight(
+            user_id=user_id, session_id=session_id
+        )
+        message_list = [convert_sql_models_to_dict(m) for m in messages]
+        for m in message_list:
+            m["created_at"] = m["created_at"].isoformat()
+
+        message_list_json = json.dumps(message_list)
+
+        try:
+            async with self.http_client.stream(
+                "POST",
+                "nl/explain",
+                json={
+                    "query": query,
+                    "user_id": user_id,
+                    "query_plan": query_plan,
+                    "message_list": message_list_json,
+                    "result_summary": results,
+                },
+                headers={"monetra-ai-key": settings.BACKEND_HEADER},
+                params={"llm_provider": settings.LLM_PROVIDER},
+            ) as rsp:
+                rsp.raise_for_status()
+
+                text = ""
+                async for line in rsp.aiter_lines():
+                    if not line:
+                        continue
+                    if line.startswith("data: "):
+                        text += line[6:]
+                        yield line + " " + "\n\n"
+
+                await self.save_message(
+                    user_id=user_id,
+                    session_id=session_id,
+                    role=ChatRoleEnum.ASSISTANT,
+                    content=text,
+                    llm_model=settings.LLM_PROVIDER,
+                )
+
+        except HTTPError:
+            rsp = "data: Unable to explain insight response.\n\n"
+            yield rsp
+
+    async def _resolve_query(
+        self, query: str, user_id: int, query_plan: dict
+    ) -> NLResolveResult:
         """Call the NL resolve endpoint and return the result."""
         response = await self.http_client.post(
             "/nl/resolve",
-            json={"query": query, "user_id": user_id},
+            json={"query": query, "user_id": user_id, "query_plan": query_plan},
             headers={"monetra-ai-key": settings.BACKEND_HEADER},
             params={"llm_provider": settings.LLM_PROVIDER},
         )
@@ -128,6 +248,16 @@ class AIInsightService:
             raise InvalidRequest(message="No category resolved for the query")
 
         return rsp
+
+    async def _validate_session(self, user_id: int, session_id: str) -> None:
+        """Validate that the session exists for the user."""
+        if not self.crud_session.get_session_by_session_id(
+            session_id=session_id, user_id=user_id
+        ):
+            logfire.warning(
+                f"Session ID not found for user_id: {user_id} with session_id: {session_id}"
+            )
+            raise MissingResource(message="Session ID not found")
 
     def _cache_resolve_result(
         self, rsp: NLResolveResult, user_id: int, session_id: str
@@ -255,124 +385,6 @@ class AIInsightService:
         }
 
         return payload
-
-    async def prepare_insight(self, query: str, user_id: int, session_id: str) -> dict:
-        """Prepare insight payload by resolving query and processing transactions."""
-        logfire.info(f"Using: {settings.LLM_PROVIDER} from the backend")
-
-        # Validate session exists
-        await self._validate_session(user_id, session_id)
-
-        # Save user message
-        await self.save_message(
-            user_id=user_id,
-            content=query,
-            role=ChatRoleEnum.USER,
-            session_id=session_id,
-            llm_model=settings.LLM_PROVIDER,
-        )
-
-        # Resolve the query
-        rsp = await self._resolve_query(query, user_id)
-
-        # Cache the resolve result
-        self._cache_resolve_result(rsp, user_id, session_id)
-
-        # Fetch and prepare transactions
-        transactions, total_transactions_amount = self._fetch_and_prepare_transactions(
-            category_id=rsp.resolved_category_id, user_id=user_id, session_id=session_id
-        )
-
-        # Calculate total amount
-        # total_transactions_amount = self._calculate_total_amount(transactions)
-
-        # Get currency code
-        currency_code = self._get_currency_code(user_id)
-
-        # Build payload
-        payload = self._build_insight_payload(
-            rsp=rsp,
-            query=query,
-            total_amount=total_transactions_amount,
-            currency_code=currency_code,
-        )
-
-        logfire.info(f"Prepared insight payload: {payload} for user_id: {user_id}")
-        return payload
-
-    async def query_insight(self, payload: dict, user_id: int, session_id: str):
-        # Stream the response
-        try:
-            async with self.http_client.stream(
-                "POST",
-                "nl/format",
-                json=payload,
-                headers={"monetra-ai-key": settings.BACKEND_HEADER},
-                params={"llm_provider": settings.LLM_PROVIDER},
-            ) as rsp:
-                rsp.raise_for_status()
-
-                text = ""
-                async for line in rsp.aiter_lines():
-                    if not line:
-                        continue
-                    if line.startswith("data: "):
-                        # print("Sending line:", line)
-                        text += line[6:]  # Remove "data: " prefix
-                        yield line + " " + "\n\n"
-
-                await self.save_message(
-                    user_id=user_id,
-                    content=text,
-                    role=ChatRoleEnum.ASSISTANT,
-                    session_id=session_id,
-                    llm_model=settings.LLM_PROVIDER,
-                )
-        except HTTPError:
-            yield "data: Unable to format insight response.\n\n"
-
-    async def explain_insight(
-        self, query: str, user_id: int, query_plan: dict, session_id: str
-    ):
-        messages = await self.get_message_history_for_ai_context(
-            user_id=user_id, session_id=session_id
-        )
-        results = await self.get_transactions_for_insight(
-            user_id=user_id, session_id=session_id
-        )
-        message_list = [convert_sql_models_to_dict(m) for m in messages]
-        for m in message_list:
-            m["created_at"] = m["created_at"].isoformat()
-
-        message_list_json = json.dumps(message_list)
-
-        try:
-            async with self.http_client.stream(
-                "POST",
-                "nl/explain",
-                json={
-                    "query": query,
-                    "user_id": user_id,
-                    "query_plan": query_plan,
-                    "message_list": message_list_json,
-                    "result_summary": results,
-                },
-                headers={"monetra-ai-key": settings.BACKEND_HEADER},
-                params={"llm_provider": settings.LLM_PROVIDER},
-            ) as rsp:
-                rsp.raise_for_status()
-
-                text = ""
-                async for line in rsp.aiter_lines():
-                    if not line:
-                        continue
-                    if line.startswith("data: "):
-                        text += line[6:]
-                        yield line + " " + "\n\n"
-
-        except HTTPError:
-            rsp = "data: Unable to explain insight response.\n\n"
-            yield rsp
 
     async def get_messages(self, user_id: int):
         messages = self.crud_chat.get_messages_by_user_id(user_id=user_id)

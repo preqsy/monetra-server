@@ -73,7 +73,7 @@ class QueryDelta(BaseModel):
 
     intent: Optional[str] = None
     target_kind: Optional[TargetKind] = None
-    target_reference: Optional[str] = (
+    target_text: Optional[str] = (
         None  # natural-language reference; backend resolves to IDs
     )
     currency_mode: Optional[str] = None

@@ -17,6 +17,7 @@ class AccountSummaryService:
 
     async def get_account_summary(self, user_id: int, date: date):
 
+        # TODO: show net worth even if no transactions exist
         summary = self.crud_total_summary.get_total_summary(user_id=user_id, date=date)
         if not summary:
             return {

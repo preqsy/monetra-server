@@ -111,6 +111,7 @@ class TransactionService:
             )
         return transactions
 
+    # TODO: Publish an event after deletion to remove from qdrant
     async def delete_transaction(self, transaction_id: int, user_id: int) -> None:
         transaction = self.crud_transaction.get_transaction_by_id(
             transaction_id, user_id
