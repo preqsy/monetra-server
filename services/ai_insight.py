@@ -15,7 +15,7 @@ from schemas.ai_schemas import Interpretation, NLResolveResult
 from schemas.chat import ChatMessageCreate, SessionChatCreate
 from schemas.enums import ChatRoleEnum
 from utils.currency_conversion import from_minor_units
-from utils.helper import convert_sql_models_to_dict
+from utils.helper import convert_sql_models_to_dict, serialize_transaction_dates
 from core import settings
 
 
@@ -269,41 +269,6 @@ class AIInsightService:
             ex=3600,
         )
 
-    def _serialize_transaction_dates(self, tx: dict) -> None:
-        """Convert datetime objects in transaction to ISO format strings."""
-        tx["created_at"] = tx["created_at"].isoformat()
-        tx["updated_at"] = tx["updated_at"].isoformat() if tx["updated_at"] else None
-        tx["date"] = tx["date"].isoformat() if tx["date"] else None
-        tx["category"]["created_at"] = tx["category"]["created_at"].isoformat()
-        tx["category"]["updated_at"] = (
-            tx["category"]["updated_at"].isoformat()
-            if tx["category"]["updated_at"]
-            else None
-        )
-        tx["user_currency"]["created_at"] = tx["user_currency"][
-            "created_at"
-        ].isoformat()
-        tx["user_currency"]["updated_at"] = (
-            tx["user_currency"]["updated_at"].isoformat()
-            if tx["user_currency"]["updated_at"]
-            else None
-        )
-
-        tx["user_currency"]["currency"]["created_at"] = tx["user_currency"]["currency"][
-            "created_at"
-        ].isoformat()
-        tx["user_currency"]["currency"]["updated_at"] = (
-            tx["user_currency"]["currency"]["updated_at"].isoformat()
-            if tx["user_currency"]["currency"]["updated_at"]
-            else None
-        )
-        tx["account"]["created_at"] = tx["account"]["created_at"].isoformat()
-        tx["account"]["updated_at"] = (
-            tx["account"]["updated_at"].isoformat()
-            if tx["account"]["updated_at"]
-            else None
-        )
-
     def _fetch_and_prepare_transactions(
         self, category_id: int, user_id: int, session_id: str
     ) -> tuple[list[dict], Decimal]:
@@ -315,7 +280,7 @@ class AIInsightService:
         transactions = [convert_sql_models_to_dict(tx) for tx in transactions]
 
         for tx in transactions:
-            self._serialize_transaction_dates(tx)
+            serialize_transaction_dates(tx)
         total_transactions_amount = self._calculate_total_amount(transactions)
 
         full_payload = {
