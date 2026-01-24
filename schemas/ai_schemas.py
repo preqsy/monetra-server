@@ -1,6 +1,7 @@
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import Enum
 
 from schemas.enums import TransactionTypeEnum
 
@@ -65,3 +66,34 @@ class NlRequest(BaseModel):
 
 class NlResponse(BaseModel):
     message: str
+
+
+class QueryDelta(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    intent: Optional[str] = None
+    target_kind: Optional[TargetKind] = None
+    target_text: Optional[str] = (
+        None  # natural-language reference; backend resolves to IDs
+    )
+    currency_mode: Optional[str] = None
+    grouping: Optional[str] = None
+
+
+class Ambiguity(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    present: bool
+    reason: Optional[str] = None
+
+
+class Interpretation(BaseModel):
+    """
+    LLM output envelope. Backend owns routing/decisions; this is advisory structure only.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    explanation_request: bool
+    delta: Optional[QueryDelta] = None
+    ambiguity: Optional[Ambiguity] = None

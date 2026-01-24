@@ -62,3 +62,35 @@ def extract_beneficiary(narration: str) -> str:
 
 
 # print(extract_beneficiary("NIP/KUDA/SAMUEL/TRANSFER 14"))
+
+
+def serialize_transaction_dates(tx: dict) -> None:
+    """Convert datetime objects in transaction to ISO format strings."""
+    tx["created_at"] = tx["created_at"].isoformat()
+    tx["updated_at"] = tx["updated_at"].isoformat() if tx["updated_at"] else None
+    tx["date"] = tx["date"].isoformat() if tx["date"] else None
+    tx["category"]["created_at"] = tx["category"]["created_at"].isoformat()
+    tx["category"]["updated_at"] = (
+        tx["category"]["updated_at"].isoformat()
+        if tx["category"]["updated_at"]
+        else None
+    )
+    tx["user_currency"]["created_at"] = tx["user_currency"]["created_at"].isoformat()
+    tx["user_currency"]["updated_at"] = (
+        tx["user_currency"]["updated_at"].isoformat()
+        if tx["user_currency"]["updated_at"]
+        else None
+    )
+
+    tx["user_currency"]["currency"]["created_at"] = tx["user_currency"]["currency"][
+        "created_at"
+    ].isoformat()
+    tx["user_currency"]["currency"]["updated_at"] = (
+        tx["user_currency"]["currency"]["updated_at"].isoformat()
+        if tx["user_currency"]["currency"]["updated_at"]
+        else None
+    )
+    tx["account"]["created_at"] = tx["account"]["created_at"].isoformat()
+    tx["account"]["updated_at"] = (
+        tx["account"]["updated_at"].isoformat() if tx["account"]["updated_at"] else None
+    )

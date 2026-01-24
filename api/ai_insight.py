@@ -18,16 +18,17 @@ async def query_insight(
     ai_insight_service: AIInsightService = Depends(get_ai_insight_service),
 ):
 
-    payload = await ai_insight_service.prepare_insight(
+    # payload = await ai_insight_service.prepare_insight(
+    #     query=query.query,
+    #     user_id=current_user.id,
+    #     session_id=query.session_id,
+    # )
+    stream = await ai_insight_service.interpret_insight(
+        user_id=current_user.id,
+        session_id=query.session_id,
         query=query.query,
-        user_id=current_user.id,
-        session_id=query.session_id,
     )
-    stream = ai_insight_service.query_insight(
-        payload=payload,
-        user_id=current_user.id,
-        session_id=query.session_id,
-    )
+
     return StreamingResponse(
         stream,
         media_type="text/event-stream",
