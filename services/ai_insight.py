@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from decimal import ROUND_HALF_UP, Decimal
 import json
+from pprint import pprint
 from uuid import uuid4
 from httpx import AsyncClient, HTTPError
 
@@ -85,6 +86,8 @@ class AIInsightService:
 
         rsp = Interpretation(**response.json())
 
+        pprint(f"User Query: {query}")
+        pprint(f"Interpretation response: {rsp.model_dump()}")
         if rsp.explanation_request == False and rsp.delta.target_kind != None:
             logfire.info(
                 f"Querying insight for user_id: {user_id} with explanation_request={rsp.explanation_request} and intent={rsp.delta.intent}"
@@ -191,7 +194,7 @@ class AIInsightService:
         for m in message_list:
             m["created_at"] = m["created_at"].isoformat()
 
-        message_list_json = json.dumps(message_list)
+        # message_list_json = json.dumps(message_list)
 
         try:
             async with self.http_client.stream(
@@ -201,7 +204,7 @@ class AIInsightService:
                     "query": query,
                     "user_id": user_id,
                     "query_plan": query_plan,
-                    "message_list": message_list_json,
+                    "message_list": message_list,
                     "result_summary": results,
                     "calculation_trace": calculation_trace,
                 },
@@ -393,27 +396,37 @@ class AIInsightService:
         )
         return messages
 
-    async def get_last_query_plan(self, user_id: int, session_id: str):
+    async def get_last_query_plan(self, user_id: int, session_id: str) -> dict:
         query_plan_json = self.redis_client.get(
             f"cache:user:{user_id}:session:{session_id}:query_plan"
         )
-        return query_plan_json if query_plan_json else "{}"
+        if query_plan_json:
+            query_plan_json = json.loads(query_plan_json)
+        return {}
 
     async def get_transactions_result_summary_for_insight(
         self, user_id: int, session_id: str
-    ):
+    ) -> list:
         transactions_json = self.redis_client.get(
             f"cache:user:{user_id}:session:{session_id}:result_summary"
         )
+        if transactions_json:
+            transactions = json.loads(transactions_json)
+            return transactions
 
-        return transactions_json if transactions_json else "[]"
+        return []
 
-    async def get_calulation_trace_for_insight(self, user_id: int, session_id: str):
+    async def get_calulation_trace_for_insight(
+        self, user_id: int, session_id: str
+    ) -> dict:
         trace_json = self.redis_client.get(
             f"cache:user:{user_id}:session:{session_id}:calculation_trace"
         )
+        if trace_json:
+            trace = json.loads(trace_json)
+            return trace
 
-        return trace_json if trace_json else "{}"
+        return {}
 
     async def save_message(
         self,
