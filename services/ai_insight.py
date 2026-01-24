@@ -87,6 +87,7 @@ class AIInsightService:
         rsp = Interpretation(**response.json())
 
         pprint(f"User Query: {query}")
+
         pprint(f"Interpretation response: {rsp.model_dump()}")
         if rsp.explanation_request == False and rsp.delta.target_kind != None:
             logfire.info(
@@ -315,6 +316,7 @@ class AIInsightService:
         full_payload = {
             "transactions": transactions,
             "total_amount_in_default": float(total_transactions_amount),
+            "currency": currency_code,
         }
 
         self.redis_client.set(
@@ -400,8 +402,10 @@ class AIInsightService:
         query_plan_json = self.redis_client.get(
             f"cache:user:{user_id}:session:{session_id}:query_plan"
         )
+        print("Retrieved query plan from Redis:", query_plan_json)
         if query_plan_json:
-            query_plan_json = json.loads(query_plan_json)
+            query_plan = json.loads(query_plan_json)
+            return query_plan
         return {}
 
     async def get_transactions_result_summary_for_insight(
