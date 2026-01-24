@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from decimal import ROUND_HALF_UP, Decimal
 import json
-from pprint import pprint
 from uuid import uuid4
 from httpx import AsyncClient, HTTPError
 
@@ -37,6 +36,7 @@ class AIInsightService:
         self.redis_client = redis_client
 
     async def create_session(self, user_id: int):
+        logfire.info(f"Creating new session for user_id: {user_id}")
         session_id = str(user_id) + "-" + str(uuid4())
         expires_at = datetime.now(timezone.utc) + timedelta(days=30)
         session_obj = SessionChatCreate(
@@ -45,6 +45,9 @@ class AIInsightService:
             expires_at=expires_at,
         )
         session = self.crud_session.create(session_obj)
+        logfire.info(
+            f"Session created successfully for user_id: {user_id}, session_id: {session_id}"
+        )
 
         return session
 
@@ -54,6 +57,9 @@ class AIInsightService:
         user_id: int,
         session_id: str,
     ):
+        logfire.info(
+            f"Starting interpret_insight for user_id: {user_id}, session_id: {session_id}, query: {query}"
+        )
         query_plan = await self.get_last_query_plan(
             user_id=user_id, session_id=session_id
         )
@@ -82,14 +88,14 @@ class AIInsightService:
         )
 
         if response.status_code != 200:
+            logfire.error(
+                f"Failed to interpret insight query: status_code={response.status_code}, response={response.text}"
+            )
             raise InvalidRequest(message="Unable to interpret insight query")
 
         rsp = Interpretation(**response.json())
 
-        pprint(f"User Query: {query}")
-
-        pprint(f"Interpretation response: {rsp.model_dump()}")
-        if rsp.explanation_request == False and rsp.delta.target_kind != None:
+        if rsp.explanation_request == False and rsp.delta != None and rsp.delta.intent:
             logfire.info(
                 f"Querying insight for user_id: {user_id} with explanation_request={rsp.explanation_request} and intent={rsp.delta.intent}"
             )
@@ -150,6 +156,9 @@ class AIInsightService:
 
     async def query_insight(self, payload: dict, user_id: int, session_id: str):
         # Stream the response
+        logfire.info(
+            f"Starting query_insight for user_id: {user_id}, session_id: {session_id}"
+        )
         try:
             async with self.http_client.stream(
                 "POST",
@@ -176,12 +185,18 @@ class AIInsightService:
                     session_id=session_id,
                     llm_model=settings.LLM_PROVIDER,
                 )
-        except HTTPError:
+        except HTTPError as e:
+            logfire.error(
+                f"HTTPError during query_insight for user_id: {user_id}: {str(e)}"
+            )
             yield "data: Unable to format insight response.\n\n"
 
     async def explain_insight(
         self, query: str, user_id: int, query_plan: dict, session_id: str
     ):
+        logfire.info(
+            f"Starting explain_insight for user_id: {user_id}, session_id: {session_id}"
+        )
         messages = await self.get_message_history_for_ai_context(
             user_id=user_id, session_id=session_id
         )
@@ -230,7 +245,10 @@ class AIInsightService:
                     llm_model=settings.LLM_PROVIDER,
                 )
 
-        except HTTPError:
+        except HTTPError as e:
+            logfire.error(
+                f"HTTPError during explain_insight for user_id: {user_id}: {str(e)}"
+            )
             rsp = "data: Unable to explain insight response.\n\n"
             yield rsp
 
@@ -246,16 +264,26 @@ class AIInsightService:
         )
 
         if response.status_code != 200:
+            logfire.error(
+                f"Failed to resolve query: status_code={response.status_code}, response={response.text}"
+            )
             raise InvalidRequest(message="Unable to resolve insight query")
 
         rsp = NLResolveResult(**response.json())
 
         if not rsp.ok:
+            logfire.warning(
+                f"Query resolution returned ok=False for user_id: {user_id}"
+            )
             raise InvalidRequest(message="Unable to resolve insight query")
 
         if rsp.resolved_category_id is None:
+            logfire.warning(f"No category resolved for query for user_id: {user_id}")
             raise InvalidRequest(message="No category resolved for the query")
 
+        logfire.info(
+            f"Query successfully resolved: category_id={rsp.resolved_category_id}, user_id={user_id}"
+        )
         return rsp
 
     async def _validate_session(self, user_id: int, session_id: str) -> None:
@@ -272,11 +300,16 @@ class AIInsightService:
         self, rsp: NLResolveResult, user_id: int, session_id: str
     ) -> None:
         """Cache the resolve result in Redis."""
-        self.redis_client.set(
-            f"cache:user:{user_id}:session:{session_id}:query_plan",
-            json.dumps(rsp.parse.model_dump()),
-            ex=3600,
-        )
+        try:
+            self.redis_client.set(
+                f"cache:user:{user_id}:session:{session_id}:query_plan",
+                json.dumps(rsp.parse.model_dump()),
+                ex=3600,
+            )
+        except Exception as e:
+            logfire.error(
+                f"Failed to cache resolve result in Redis for user_id: {user_id}: {str(e)}"
+            )
 
     def _fetch_and_prepare_transactions(
         self,
@@ -312,23 +345,27 @@ class AIInsightService:
             "metric": "total_spent",
         }
 
-        print("Calculation trace:", calculation_trace)
         full_payload = {
             "transactions": transactions,
             "total_amount_in_default": float(total_transactions_amount),
             "currency": currency_code,
         }
 
-        self.redis_client.set(
-            f"cache:user:{user_id}:session:{session_id}:result_summary",
-            json.dumps(full_payload, default=float),
-            ex=3600,
-        )
-        self.redis_client.set(
-            f"cache:user:{user_id}:session:{session_id}:calculation_trace",
-            json.dumps(calculation_trace, default=float),
-            ex=3600,
-        )
+        try:
+            self.redis_client.set(
+                f"cache:user:{user_id}:session:{session_id}:result_summary",
+                json.dumps(full_payload, default=float),
+                ex=3600,
+            )
+            self.redis_client.set(
+                f"cache:user:{user_id}:session:{session_id}:calculation_trace",
+                json.dumps(calculation_trace, default=float),
+                ex=3600,
+            )
+        except Exception as e:
+            logfire.error(
+                f"Failed to cache transaction data in Redis for user_id: {user_id}: {str(e)}"
+            )
 
         return transactions, total_transactions_amount
 
@@ -350,7 +387,7 @@ class AIInsightService:
         total_transactions_amount = from_minor_units(
             amount_minor=total_transactions_amount, currency=currency_code
         )
-        print(f"Total transactions amount: {total_transactions_amount}")
+
         return total_transactions_amount
 
     def _get_currency_code(self, user_id: int) -> str:
@@ -399,38 +436,53 @@ class AIInsightService:
         return messages
 
     async def get_last_query_plan(self, user_id: int, session_id: str) -> dict:
-        query_plan_json = self.redis_client.get(
-            f"cache:user:{user_id}:session:{session_id}:query_plan"
-        )
-        print("Retrieved query plan from Redis:", query_plan_json)
-        if query_plan_json:
-            query_plan = json.loads(query_plan_json)
-            return query_plan
-        return {}
+        try:
+            query_plan_json = self.redis_client.get(
+                f"cache:user:{user_id}:session:{session_id}:query_plan"
+            )
+            if query_plan_json:
+                query_plan = json.loads(query_plan_json)
+                return query_plan
+            return {}
+        except Exception as e:
+            logfire.error(
+                f"Error retrieving query plan from Redis for user_id: {user_id}: {str(e)}"
+            )
+            return {}
 
     async def get_transactions_result_summary_for_insight(
         self, user_id: int, session_id: str
     ) -> list:
-        transactions_json = self.redis_client.get(
-            f"cache:user:{user_id}:session:{session_id}:result_summary"
-        )
-        if transactions_json:
-            transactions = json.loads(transactions_json)
-            return transactions
-
-        return []
+        try:
+            transactions_json = self.redis_client.get(
+                f"cache:user:{user_id}:session:{session_id}:result_summary"
+            )
+            if transactions_json:
+                transactions = json.loads(transactions_json)
+                return transactions
+            return []
+        except Exception as e:
+            logfire.error(
+                f"Error retrieving transaction result summary from Redis for user_id: {user_id}: {str(e)}"
+            )
+            return []
 
     async def get_calulation_trace_for_insight(
         self, user_id: int, session_id: str
     ) -> dict:
-        trace_json = self.redis_client.get(
-            f"cache:user:{user_id}:session:{session_id}:calculation_trace"
-        )
-        if trace_json:
-            trace = json.loads(trace_json)
-            return trace
-
-        return {}
+        try:
+            trace_json = self.redis_client.get(
+                f"cache:user:{user_id}:session:{session_id}:calculation_trace"
+            )
+            if trace_json:
+                trace = json.loads(trace_json)
+                return trace
+            return {}
+        except Exception as e:
+            logfire.error(
+                f"Error retrieving calculation trace from Redis for user_id: {user_id}: {str(e)}"
+            )
+            return {}
 
     async def save_message(
         self,
@@ -440,12 +492,18 @@ class AIInsightService:
         session_id: str,
         llm_model: str,
     ):
-        message_obj = ChatMessageCreate(
-            user_id=user_id,
-            content=content,
-            role=role,
-            session_id=session_id,
-            llm_model=llm_model,
-        )
-        chat = self.crud_chat.create(message_obj)
-        return chat
+        try:
+            message_obj = ChatMessageCreate(
+                user_id=user_id,
+                content=content,
+                role=role,
+                session_id=session_id,
+                llm_model=llm_model,
+            )
+            chat = self.crud_chat.create(message_obj)
+            return chat
+        except Exception as e:
+            logfire.error(
+                f"Failed to save message for user_id: {user_id}, role: {role}: {str(e)}"
+            )
+            raise
