@@ -1,9 +1,11 @@
 import logfire
 from redis import Redis
+from core.config import settings
 
 redis_client = Redis(
-    host="localhost",
-    port=6380,
+    host=settings.REDIS_HOST,
+    port=settings.REDIS_PORT,
+    password=settings.REDIS_PASSWORD,
     db=0,
     health_check_interval=30,
     decode_responses=True,
