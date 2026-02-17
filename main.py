@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 import logfire
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +11,7 @@ from services.kafka_producer import producer
 from core import settings
 from core.externals.firebase.firebase_init import init_firebase
 
+load_dotenv()
 
 logfire.configure(service_name="monetraserver", environment=settings.ENVIRONMENT)
 logfire.info(f"Starting Monetra Server in {settings.ENVIRONMENT} environment...")
