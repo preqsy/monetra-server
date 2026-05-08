@@ -13,6 +13,7 @@ from core.externals.mono.mono_client import MonoClient
 from crud.account import CRUDAccount
 from crud.user import CRUDAuthUser
 from schemas.user import RegisterCreate, RegisterPayload
+from tarsq import submit, get_status
 
 
 class AuthService:
@@ -57,9 +58,13 @@ class AuthService:
             raise ResourceExists(message="Account with email already exists")
 
         new_user = self.crud_auth_user.create(user_data.model_dump())
+        # job_id = submit("add_default_currency", user_id=new_user.id)
+        # submit("add_default_accounts", user_id=new_user.id)
+        # submit("add_user_default_categories", user_id=new_user.id)
+
         await self.queue_connection.enqueue_job(
             "add_default_currency",
-            user_id=new_user.id,
+            {"user_id": new_user.id},
         )
         await self.queue_connection.enqueue_job(
             "add_default_accounts",

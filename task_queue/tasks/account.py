@@ -1,12 +1,21 @@
 from core.exceptions import MissingResource
 from crud.account import CRUDAccount
-from crud.currency import CRUDCurrency, CRUDUserCurrency
+from crud.currency import (
+    CRUDCurrency,
+    CRUDUserCurrency,
+    get_crud_currency,
+    get_crud_user_currency,
+)
 from schemas.account import AccountCreate
 from schemas.currency import UserCurrencyCreate
 from schemas.enums import AccountCategoryEnum, AccountCategoryEnum, AccountTypeEnum
 
+from tarsq import task
 
+
+@task("add_default_currency")
 async def add_default_currency(ctx, user_id):
+    user_id = user_id.get("user_id") if isinstance(user_id, dict) else user_id
     crud_currency: CRUDCurrency = ctx["crud_currency"]
     crud_user_currency: CRUDUserCurrency = ctx["crud_user_currency"]
     default_currency = crud_currency.get_currency_by_code("USD")
@@ -21,6 +30,7 @@ async def add_default_currency(ctx, user_id):
     crud_user_currency.create(user_currency)
 
 
+@task("add_default_accounts")
 async def add_default_accounts(ctx, user_id):
     crud_account: CRUDAccount = ctx["crud_account"]
     crud_user_currency: CRUDUserCurrency = ctx["crud_user_currency"]

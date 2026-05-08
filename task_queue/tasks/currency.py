@@ -1,3 +1,5 @@
+from tarsq import task
+
 from core.exceptions import MissingResource
 from crud.currency import CRUDCurrency, CRUDUserCurrency
 from schemas.currency import UserCurrencyUpdate
@@ -5,6 +7,7 @@ from utils.currency_conversion import change_default_currency
 from utils.helper import convert_sql_models_to_dict
 
 
+@task("update_currencies_exchange_rate")
 async def update_currencies_exchange_rate(ctx, user_id, currency_code: str):
     crud_user_currency: CRUDUserCurrency = ctx["crud_user_currency"]
 

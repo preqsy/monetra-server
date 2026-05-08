@@ -1,11 +1,14 @@
 import logging
 from datetime import datetime, timedelta, timezone
+
+from tarsq import task
 from crud.account import CRUDAccount
 from crud.user import CRUDAuthUser
 
 logger = logging.getLogger(__name__)
 
 
+@task("update_user_last_activity")
 async def update_user_last_activity(ctx, user_id: int):
 
     from task_queue.main import get_queue_connection
