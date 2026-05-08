@@ -1,5 +1,6 @@
 from typing import Tuple
 from arq import ArqRedis
+from tarsq import submit
 from core.exceptions import MissingResource, ResourceExists
 from crud.currency import (
     CRUDCurrency,
@@ -35,9 +36,12 @@ class CurrencyService:
             self.crud_user_currency.update_by_user_id(
                 user_id=user_id, data_obj=UserCurrencyUpdate(is_default=False)
             )
-            await self.queue_connection.enqueue_job(
-                "update_currencies_exchange_rate", user_id, currency.code
-            )
+            task_payload = {"user_id": user_id, "currency_code": currency.code}
+
+            submit("update_currencies_exchange_rate", task_payload)
+            # await self.queue_connection.enqueue_job(
+            #     "update_currencies_exchange_rate", task_payload
+            # )
         data_obj.user_id = user_id
         currency = self.crud_user_currency.create(data_obj.model_dump())
         return currency
@@ -52,9 +56,14 @@ class CurrencyService:
                 user_id=user_id, data_obj=UserCurrencyUpdate(is_default=False)
             )
 
-            await self.queue_connection.enqueue_job(
-                "update_currencies_exchange_rate", user_id, user_currency.currency.code
+            submit(
+                "update_currencies_exchange_rate",
+                {"user_id": user_id, "currency_code": user_currency.currency.code},
             )
+
+            # await self.queue_connection.enqueue_job(
+            #     "update_currencies_exchange_rate", user_id, user_currency.currency.code
+            # )
         self.crud_user_currency.update(id=data_obj.id, data_obj=data_obj)
 
         return user_currency

@@ -10,12 +10,12 @@ from schemas.account import AccountCreate
 from schemas.currency import UserCurrencyCreate
 from schemas.enums import AccountCategoryEnum, AccountCategoryEnum, AccountTypeEnum
 
-from tarsq import task
+from tarsq import submit, task
 
 
-@task("add_default_currency")
-async def add_default_currency(ctx, user_id):
-    user_id = user_id.get("user_id") if isinstance(user_id, dict) else user_id
+@task("initialize_user_data")
+async def add_default_currency(ctx, payload: dict):
+    user_id = payload["user_id"]
     crud_currency: CRUDCurrency = ctx["crud_currency"]
     crud_user_currency: CRUDUserCurrency = ctx["crud_user_currency"]
     default_currency = crud_currency.get_currency_by_code("USD")
@@ -31,7 +31,8 @@ async def add_default_currency(ctx, user_id):
 
 
 @task("add_default_accounts")
-async def add_default_accounts(ctx, user_id):
+async def add_default_accounts(ctx, payload: dict):
+    user_id = payload["user_id"]
     crud_account: CRUDAccount = ctx["crud_account"]
     crud_user_currency: CRUDUserCurrency = ctx["crud_user_currency"]
 
@@ -56,3 +57,6 @@ async def add_default_accounts(ctx, user_id):
             amount_in_default=0,
         )
         crud_account.create(account_obj)
+
+    submit("add_default_accounts", {"user_id": user_id})
+    submit("add_user_default_categories", {"user_id": user_id})

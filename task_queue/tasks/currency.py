@@ -8,7 +8,11 @@ from utils.helper import convert_sql_models_to_dict
 
 
 @task("update_currencies_exchange_rate")
-async def update_currencies_exchange_rate(ctx, user_id, currency_code: str):
+async def update_currencies_exchange_rate(ctx, payload: dict):
+
+    currency_code = payload["currency_code"]
+    user_id = payload["user_id"]
+
     crud_user_currency: CRUDUserCurrency = ctx["crud_user_currency"]
 
     user_currencies = crud_user_currency.get_user_currencies(user_id)

@@ -4,8 +4,8 @@ from crud.category import CRUDCategory, CRUDUserCategory
 
 
 @task("add_user_default_categories")
-async def add_user_default_categories(ctx, user_id: dict | int):
-    user_id = user_id.get("user_id") if isinstance(user_id, dict) else user_id
+async def add_user_default_categories(ctx, payload: dict):
+    user_id = payload["user_id"]
     crud_category: CRUDCategory = ctx["crud_category"]
     crud_user_category: CRUDUserCategory = ctx["crud_user_category"]
 
