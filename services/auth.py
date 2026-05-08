@@ -24,14 +24,12 @@ class AuthService:
         crud_currency: CRUDCurrency,
         crud_user_currency: CRUDUserCurrency,
         mono_client: MonoClient,
-        queue_connection: ArqRedis,
     ):
         self.crud_auth_user = crud_auth_user
         self.crud_currency = crud_currency
         self.crud_user_currency = crud_user_currency
         self.crud_account = crud_account
         self.mono_client = mono_client
-        self.queue_connection = queue_connection
 
     async def register(
         self,
