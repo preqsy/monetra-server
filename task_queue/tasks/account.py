@@ -27,6 +27,9 @@ async def add_default_currency(ctx, payload: dict):
     )
     crud_user_currency.create(user_currency)
 
+    dispatch("add_default_accounts", {"user_id": user_id})
+    dispatch("add_user_default_categories", {"user_id": user_id})
+
 
 @task("add_default_accounts")
 async def add_default_accounts(ctx, payload: dict):
@@ -55,6 +58,3 @@ async def add_default_accounts(ctx, payload: dict):
             amount_in_default=0,
         )
         crud_account.create(account_obj)
-
-    dispatch("add_default_accounts", {"user_id": user_id})
-    dispatch("add_user_default_categories", {"user_id": user_id})
