@@ -3,14 +3,12 @@ from crud.account import CRUDAccount
 from crud.currency import (
     CRUDCurrency,
     CRUDUserCurrency,
-    get_crud_currency,
-    get_crud_user_currency,
 )
 from schemas.account import AccountCreate
 from schemas.currency import UserCurrencyCreate
 from schemas.enums import AccountCategoryEnum, AccountCategoryEnum, AccountTypeEnum
 
-from tarsq import submit, task
+from tarsq import dispatch, task
 
 
 @task("initialize_user_data")
@@ -58,5 +56,5 @@ async def add_default_accounts(ctx, payload: dict):
         )
         crud_account.create(account_obj)
 
-    submit("add_default_accounts", {"user_id": user_id})
-    submit("add_user_default_categories", {"user_id": user_id})
+    dispatch("add_default_accounts", {"user_id": user_id})
+    dispatch("add_user_default_categories", {"user_id": user_id})

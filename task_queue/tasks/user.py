@@ -9,9 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 @task("update_user_last_activity")
-async def update_user_last_activity(ctx, user_id: int):
+async def update_user_last_activity(ctx, payload: dict):
 
     from task_queue.main import get_queue_connection
+
+    user_id = payload["user_id"]
 
     crud_user: CRUDAuthUser = ctx["crud_user"]
     crud_account: CRUDAccount = ctx["crud_account"]

@@ -12,8 +12,8 @@ from core.exceptions import ResourceExists
 from core.externals.mono.mono_client import MonoClient
 from crud.account import CRUDAccount
 from crud.user import CRUDAuthUser
-from schemas.user import RegisterCreate, RegisterPayload
-from tarsq import submit, get_status
+from schemas.user import Payload, RegisterCreate, RegisterPayload
+from tarsq import dispatch, status
 
 
 class AuthService:
@@ -57,6 +57,8 @@ class AuthService:
 
         new_user = self.crud_auth_user.create(user_data.model_dump())
 
-        submit("initialize_user_data", {"user_id": new_user.id})
+        obj = Payload(user_id=new_user.id)
+
+        dispatch("initialize_user_data", obj)
 
         return new_user
