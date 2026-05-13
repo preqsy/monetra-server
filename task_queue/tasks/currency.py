@@ -13,7 +13,7 @@ async def update_currencies_exchange_rate(ctx, payload: dict):
     currency_code = payload["currency_code"]
     user_id = payload["user_id"]
 
-    crud_user_currency: CRUDUserCurrency = ctx["crud_user_currency"]
+    crud_user_currency: CRUDUserCurrency = ctx["crud_user_currency"]()
 
     user_currencies = crud_user_currency.get_user_currencies(user_id)
     if not user_currencies:

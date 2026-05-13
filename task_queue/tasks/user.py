@@ -15,8 +15,8 @@ async def update_user_last_activity(ctx, payload: dict):
 
     user_id = payload["user_id"]
 
-    crud_user: CRUDAuthUser = ctx["crud_user"]
-    crud_account: CRUDAccount = ctx["crud_account"]
+    crud_user: CRUDAuthUser = ctx["crud_user"]()
+    crud_account: CRUDAccount = ctx["crud_account"]()
     queue_connection = await get_queue_connection()
     user = crud_user.get(id=user_id)
     user_automatic_accounts = crud_account.get_automatic_accounts(user_id=user_id)

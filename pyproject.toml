@@ -20,7 +20,7 @@ confluent-kafka = "^2.13.0"
 logfire = {extras = ["fastapi"], version = "^4.18.0"}
 redis = "^5.3"
 python-dotenv = "^1.2.1"
-tarsq = "0.1.13"
+tarsq = "0.1.16"
 
 
 [build-system]

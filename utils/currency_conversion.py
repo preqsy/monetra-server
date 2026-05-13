@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import List, Dict
 
 currencies_json_path = str(Path.cwd() / "currencies.json")
-print("This is the currencies JSON path:", currencies_json_path)
+# print("This is the currencies JSON path:", currencies_json_path)
 
 
 def load_currency_decimals(json_path: str) -> dict[str, int]:
