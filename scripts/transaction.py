@@ -60,7 +60,7 @@ SAMPLE_TRANSACTIONS = [
 ]
 
 
-@schedule("create_sample_transactions", cron="every 1 minute")
+@schedule("create_sample_transactions", cron="every 5 minutes")
 @task("create_sample_transactions", max_retries=2)
 async def create_sample_transactions(ctx, payload: dict = None):
     crud_user: CRUDAuthUser = ctx["crud_user"]()
