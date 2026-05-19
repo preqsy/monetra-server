@@ -1,0 +1,8 @@
+services:
+  monetra-server:
+    build: .
+    ports:
+      - "127.0.0.1:9000:8000"
+    env_file:
+      - .env
+    restart: unless-stopped
