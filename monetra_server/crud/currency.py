@@ -1,0 +1,69 @@
+from typing import List, Optional
+from monetra_server.core.db import get_db
+from monetra_server.crud.base import CRUDBase
+from monetra_server.models.currency import Currency, UserCurrency
+from sqlalchemy.orm import joinedload
+
+from monetra_server.schemas.currency import UserCurrencyUpdate
+
+
+class CRUDCurrency(CRUDBase):
+    def get_currency_by_code(self, code: str) -> Optional[Currency]:
+        return self.db.query(Currency).filter(Currency.code == code.upper()).first()
+
+    def get_currency_by_id(self, id: int) -> Optional[Currency]:
+        return self.db.query(Currency).filter(Currency.id == id).first()
+
+    def get_all_currencies(self) -> List[Currency]:
+        return self.db.query(Currency).all()
+
+
+class CRUDUserCurrency(CRUDBase[UserCurrency]):
+    def _get_user_currency_query_by_user_id(self, user_id: int):
+        return (
+            self.db.query(UserCurrency)
+            .filter(UserCurrency.user_id == user_id)
+            .options(joinedload(UserCurrency.currency))
+        )
+
+    def get_user_currencies(self, user_id: int):
+        return self._get_user_currency_query_by_user_id(user_id).all()
+
+    def get_user_currency(self, user_id: int, user_currency_id: int):
+        return (
+            self._get_user_currency_query_by_user_id(user_id)
+            .filter(UserCurrency.id == user_currency_id)
+            .first()
+        )
+
+    def get_user_currency_by_currency_id(self, user_id: int, currency_id: int):
+        return (
+            self._get_user_currency_query_by_user_id(user_id)
+            .filter(UserCurrency.currency_id == currency_id)
+            .first()
+        )
+
+    def get_user_default_currency(self, user_id: int):
+        return (
+            self._get_user_currency_query_by_user_id(user_id)
+            .filter(UserCurrency.is_default == True)
+            .first()
+        )
+
+    def update_by_user_id(self, user_id: int, data_obj: UserCurrencyUpdate):
+        self.db.query(UserCurrency).filter(UserCurrency.user_id == user_id).update(
+            data_obj.model_dump(exclude_unset=True)
+        )
+        self.db.commit()
+        return data_obj.model_dump()
+
+
+db_session = next(get_db())
+
+
+def get_crud_currency():
+    return CRUDCurrency(model=Currency, db=db_session)
+
+
+def get_crud_user_currency():
+    return CRUDUserCurrency(model=UserCurrency, db=db_session)

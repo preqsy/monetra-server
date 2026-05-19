@@ -7,4 +7,4 @@ worker:
 	$(VENV_PYTHON) -m arq task_queue.main.WorkerSettings
 
 run:
-	$(VENV_PYTHON) -m uvicorn main:app --reload
+	$(VENV_PYTHON) -m uvicorn monetra_server.main:app --reload

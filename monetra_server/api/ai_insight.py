@@ -1,0 +1,53 @@
+from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
+
+from monetra_server.api.dependencies.authorization import get_current_user
+from monetra_server.api.dependencies.service import get_ai_insight_service
+from monetra_server.models.user import User
+from monetra_server.schemas.ai_schemas import NlRequest, NlResponse
+from monetra_server.schemas.chat import SessionChatResponse
+from monetra_server.services.ai_insight import AIInsightService
+
+router = APIRouter(prefix="/insights", tags=["Insight"])
+
+
+@router.post("/query", response_model=NlResponse)
+async def query_insight(
+    query: NlRequest,
+    current_user: User = Depends(get_current_user),
+    ai_insight_service: AIInsightService = Depends(get_ai_insight_service),
+):
+
+    # payload = await ai_insight_service.prepare_insight(
+    #     query=query.query,
+    #     user_id=current_user.id,
+    #     session_id=query.session_id,
+    # )
+    stream = await ai_insight_service.interpret_insight(
+        user_id=current_user.id,
+        session_id=query.session_id,
+        query=query.query,
+    )
+
+    return StreamingResponse(
+        stream,
+        media_type="text/event-stream",
+    )
+
+
+@router.post("/create-session", response_model=SessionChatResponse)
+async def create_session(
+    current_user: User = Depends(get_current_user),
+    ai_insight_service: AIInsightService = Depends(get_ai_insight_service),
+):
+    session_id = await ai_insight_service.create_session(user_id=current_user.id)
+    return session_id
+
+
+@router.get("/messages")
+async def get_messages(
+    current_user: User = Depends(get_current_user),
+    ai_insight_service: AIInsightService = Depends(get_ai_insight_service),
+):
+    messages = await ai_insight_service.get_messages(user_id=current_user.id)
+    return messages

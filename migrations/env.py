@@ -3,18 +3,18 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
-from core import settings
-from core.db import Base, engine
+from monetra_server.core import settings
+from monetra_server.core.db import Base, engine
 from alembic import context
 
-import models.user
-import models.account
-import models.currency
-import models.transaction
-import models.category
-import models.planner
-import models.rules
-import models.chat
+import monetra_server.models.user
+import monetra_server.models.account
+import monetra_server.models.currency
+import monetra_server.models.transaction
+import monetra_server.models.category
+import monetra_server.models.planner
+import monetra_server.models.rules
+import monetra_server.models.chat
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
