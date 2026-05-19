@@ -1,14 +1,21 @@
 from core.exceptions import MissingResource
 from crud.account import CRUDAccount
-from crud.currency import CRUDCurrency, CRUDUserCurrency
+from crud.currency import (
+    CRUDCurrency,
+    CRUDUserCurrency,
+)
 from schemas.account import AccountCreate
 from schemas.currency import UserCurrencyCreate
 from schemas.enums import AccountCategoryEnum, AccountCategoryEnum, AccountTypeEnum
 
+from tarsq import dispatch, task
 
-async def add_default_currency(ctx, user_id):
-    crud_currency: CRUDCurrency = ctx["crud_currency"]
-    crud_user_currency: CRUDUserCurrency = ctx["crud_user_currency"]
+
+@task("initialize_user_data", max_retries=3)
+def add_default_currency(ctx, payload: dict):
+    user_id = payload["user_id"]
+    crud_currency: CRUDCurrency = ctx["crud_currency"]()
+    crud_user_currency: CRUDUserCurrency = ctx["crud_user_currency"]()
     default_currency = crud_currency.get_currency_by_code("USD")
     if not default_currency:
         raise MissingResource(message="Default currency not found")
@@ -20,10 +27,15 @@ async def add_default_currency(ctx, user_id):
     )
     crud_user_currency.create(user_currency)
 
+    dispatch("add_default_accounts", {"user_id": user_id})
+    dispatch("add_user_default_categories", {"user_id": user_id})
 
-async def add_default_accounts(ctx, user_id):
-    crud_account: CRUDAccount = ctx["crud_account"]
-    crud_user_currency: CRUDUserCurrency = ctx["crud_user_currency"]
+
+@task("add_default_accounts")
+async def add_default_accounts(ctx, payload: dict):
+    user_id = payload["user_id"]
+    crud_account: CRUDAccount = ctx["crud_account"]()
+    crud_user_currency: CRUDUserCurrency = ctx["crud_user_currency"]()
 
     # TODO: CONSIDER ADDING A DEFAULT CURRENCY FOR THE USERS
     default_currency = crud_user_currency.get_user_default_currency(user_id)

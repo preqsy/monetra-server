@@ -18,6 +18,10 @@ class RegisterCreate(BaseModel):
     uid: str
 
 
+class Payload(BaseModel):
+    user_id: int
+
+
 class RegisterResponse(BaseModel):
     id: int
     uid: str

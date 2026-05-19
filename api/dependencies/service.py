@@ -53,7 +53,6 @@ def get_auth_service(
     crud_auth_user=Depends(get_crud_auth_user),
     crud_account=Depends(get_crud_account),
     mono_client=Depends(get_mono_client),
-    queue_connection=Depends(get_queue_connection),
     crud_currency=Depends(get_crud_currency),
     crud_user_currency=Depends(get_crud_user_currency),
 ) -> AuthService:
@@ -61,7 +60,6 @@ def get_auth_service(
         crud_auth_user=crud_auth_user,
         crud_account=crud_account,
         mono_client=mono_client,
-        queue_connection=queue_connection,
         crud_currency=crud_currency,
         crud_user_currency=crud_user_currency,
     )
@@ -77,9 +75,8 @@ def get_category_service(
 def get_currency_service(
     crud_currency=Depends(get_crud_currency),
     crud_user_currency=Depends(get_crud_user_currency),
-    queue_connection=Depends(get_queue_connection),
 ) -> CurrencyService:
-    return CurrencyService(crud_currency, crud_user_currency, queue_connection)
+    return CurrencyService(crud_currency, crud_user_currency)
 
 
 def get_external_service(
@@ -138,7 +135,6 @@ def get_budget_service(
 
 def get_transaction_service(
     crud_transaction=Depends(get_crud_transaction),
-    queue_connection=Depends(get_queue_connection),
     crud_user_currency=Depends(get_crud_user_currency),
     crud_account=Depends(get_crud_account),
     crud_user_category=Depends(get_crud_user_category),
@@ -151,7 +147,6 @@ def get_transaction_service(
 ) -> TransactionService:
     return TransactionService(
         crud_transaction=crud_transaction,
-        queue_connection=queue_connection,
         crud_user_currency=crud_user_currency,
         crud_account=crud_account,
         crud_user_category=crud_user_category,

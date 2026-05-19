@@ -32,7 +32,6 @@ class TransactionService:
     def __init__(
         self,
         crud_transaction: CRUDTransaction,
-        queue_connection: ArqRedis,
         crud_user_currency: CRUDUserCurrency,
         crud_account: CRUDAccount,
         crud_user_category: CRUDUserCategory,
@@ -44,7 +43,6 @@ class TransactionService:
         category_service=CategoryService,
     ):
         self.crud_transaction = crud_transaction
-        self.queue_connection = queue_connection
         self.crud_user_currency = crud_user_currency
         self.crud_account = crud_account
         self.crud_user_category = crud_user_category

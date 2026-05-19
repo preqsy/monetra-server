@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "dev"
 
     REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6380
+    REDIS_PORT: int = 6379
     REDIS_PASSWORD: str = ""
 
     PLAID_CLIENT_ID: str = ""

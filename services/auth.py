@@ -12,7 +12,8 @@ from core.exceptions import ResourceExists
 from core.externals.mono.mono_client import MonoClient
 from crud.account import CRUDAccount
 from crud.user import CRUDAuthUser
-from schemas.user import RegisterCreate, RegisterPayload
+from schemas.user import Payload, RegisterCreate, RegisterPayload
+from tarsq import dispatch, status
 
 
 class AuthService:
@@ -23,14 +24,12 @@ class AuthService:
         crud_currency: CRUDCurrency,
         crud_user_currency: CRUDUserCurrency,
         mono_client: MonoClient,
-        queue_connection: ArqRedis,
     ):
         self.crud_auth_user = crud_auth_user
         self.crud_currency = crud_currency
         self.crud_user_currency = crud_user_currency
         self.crud_account = crud_account
         self.mono_client = mono_client
-        self.queue_connection = queue_connection
 
     async def register(
         self,
@@ -57,16 +56,9 @@ class AuthService:
             raise ResourceExists(message="Account with email already exists")
 
         new_user = self.crud_auth_user.create(user_data.model_dump())
-        await self.queue_connection.enqueue_job(
-            "add_default_currency",
-            user_id=new_user.id,
-        )
-        await self.queue_connection.enqueue_job(
-            "add_default_accounts",
-            user_id=new_user.id,
-        )
-        await self.queue_connection.enqueue_job(
-            "add_user_default_categories",
-            user_id=new_user.id,
-        )
+
+        obj = Payload(user_id=new_user.id)
+
+        dispatch("initialize_user_data", obj)
+
         return new_user

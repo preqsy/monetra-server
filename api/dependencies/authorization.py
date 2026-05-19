@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from arq import ArqRedis
 from fastapi import Depends
+from tarsq import dispatch
 
 from core.exceptions import InvalidRequest
 from core.externals.firebase.auth_dep import verify_firebase_token
@@ -21,6 +22,9 @@ async def get_current_user(
     if user_data.last_activity_time and datetime.now(
         timezone.utc
     ) - user_data.last_activity_time > timedelta(minutes=20):
+
+        dispatch("update_user_last_activity", user_id=user_data.id)
+
         await queue_connection.enqueue_job(
             "update_user_last_activity", user_id=user_data.id
         )

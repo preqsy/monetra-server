@@ -29,7 +29,13 @@ async def lifespan(_: FastAPI):
 app = FastAPI(lifespan=lifespan)
 logfire.instrument_fastapi(app)
 
-origins = ["*"]
+# origins = ["*"]
+
+origins = [
+    "https://www.monetrify.online",
+    "https://monetrify.online",
+    "http://localhost:8080",
+]
 
 app.add_middleware(
     CORSMiddleware,

@@ -3,7 +3,6 @@ name = "monetra-server"
 version = "0.1.0"
 description = ""
 authors = ["preqsy <obbyprecious24@gmail.com>"]
-readme = "README.md"
 packages = [{include = "api"}, {include = "core"}, {include = "crud"}, {include = "models"}, {include = "schemas"}, {include = "services"}, {include = "task_queue"}, {include = "utils"}]
 
 [tool.poetry.dependencies]
@@ -21,6 +20,7 @@ confluent-kafka = "^2.13.0"
 logfire = {extras = ["fastapi"], version = "^4.18.0"}
 redis = "^5.3"
 python-dotenv = "^1.2.1"
+tarsq = "0.1.19"
 
 
 [build-system]
