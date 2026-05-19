@@ -1,8 +1,8 @@
 from typing import Optional
 from sqlalchemy.orm import joinedload
-from core.db import get_db
-from crud.base import CRUDBase
-from models.user import SubscriptionPlan, UserSubscription
+from monetra_server.core.db import get_db
+from monetra_server.crud.base import CRUDBase
+from monetra_server.models.user import SubscriptionPlan, UserSubscription
 
 
 class CRUDUserSubscription(CRUDBase[UserSubscription]):

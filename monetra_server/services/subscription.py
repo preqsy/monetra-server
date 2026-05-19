@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
 from dateutil.relativedelta import relativedelta
-from core.exceptions import InvalidRequest
-from crud.subscription import CRUDSubscriptionPlan, CRUDUserSubscription
-from schemas.enums import SubscriptionBillingCycleEnum
-from schemas.subscription import UserSubscriptionCreate
+from monetra_server.core.exceptions import InvalidRequest
+from monetra_server.crud.subscription import CRUDSubscriptionPlan, CRUDUserSubscription
+from monetra_server.schemas.enums import SubscriptionBillingCycleEnum
+from monetra_server.schemas.subscription import UserSubscriptionCreate
 
 
 class SubscriptionService:

@@ -10,7 +10,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from core.db import Base
+from monetra_server.core.db import Base
 
 
 class Currency(Base):

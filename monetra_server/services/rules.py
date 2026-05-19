@@ -1,7 +1,7 @@
-from core.exceptions import MissingResource
-from crud.category import CRUDUserCategory
-from crud.rules import CRUDRules
-from schemas.rules import RuleCreate
+from monetra_server.core.exceptions import MissingResource
+from monetra_server.crud.category import CRUDUserCategory
+from monetra_server.crud.rules import CRUDRules
+from monetra_server.schemas.rules import RuleCreate
 
 
 class TransactionRuleService:

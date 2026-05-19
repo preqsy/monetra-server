@@ -3,15 +3,15 @@ import logging
 from arq import ArqRedis, create_pool
 from arq.connections import RedisSettings
 
-from core import settings
-from crud.category import get_crud_category, get_crud_user_category
-from crud.rules import get_crud_rules
-from crud.transaction import get_crud_transaction
-from crud.user import get_crud_auth_user
+from monetra_server.core import settings
+from monetra_server.crud.category import get_crud_category, get_crud_user_category
+from monetra_server.crud.rules import get_crud_rules
+from monetra_server.crud.transaction import get_crud_transaction
+from monetra_server.crud.user import get_crud_auth_user
 from .tasks import registered_tasks
 
-from crud.account import get_crud_account
-from crud.currency import get_crud_currency, get_crud_user_currency
+from monetra_server.crud.account import get_crud_account
+from monetra_server.crud.currency import get_crud_currency, get_crud_user_currency
 
 
 logging.basicConfig(level=logging.INFO)

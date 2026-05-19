@@ -3,11 +3,11 @@ from arq import ArqRedis
 from fastapi import Depends
 from tarsq import dispatch
 
-from core.exceptions import InvalidRequest
-from core.externals.firebase.auth_dep import verify_firebase_token
-from crud.user import CRUDAuthUser, get_crud_auth_user
-from task_queue.main import get_queue_connection
-from models.user import User
+from monetra_server.core.exceptions import InvalidRequest
+from monetra_server.core.externals.firebase.auth_dep import verify_firebase_token
+from monetra_server.crud.user import CRUDAuthUser, get_crud_auth_user
+from monetra_server.task_queue.main import get_queue_connection
+from monetra_server.models.user import User
 
 
 async def get_current_user(

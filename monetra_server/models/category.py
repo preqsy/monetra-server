@@ -1,6 +1,6 @@
 from sqlalchemy import TIMESTAMP, Boolean, Column, ForeignKey, String, Integer, text
 from sqlalchemy.orm import relationship
-from core.db import Base
+from monetra_server.core.db import Base
 
 
 class Category(Base):

@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends
 
-from api.dependencies.authorization import get_current_user
-from api.dependencies.service import get_currency_service
-from models.user import User
-from schemas.currency import (
+from monetra_server.api.dependencies.authorization import get_current_user
+from monetra_server.api.dependencies.service import get_currency_service
+from monetra_server.models.user import User
+from monetra_server.schemas.currency import (
     CurrencyResponse,
     UserCurrencyCreate,
     UserCurrencyResponse,
     UserCurrencyUpdate,
 )
-from services import CurrencyService
+from monetra_server.services import CurrencyService
 
 
 router = APIRouter(prefix="/currencies", tags=["Currency"])

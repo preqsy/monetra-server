@@ -6,8 +6,8 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import json
 from sqlalchemy.orm import Session
 
-from models.currency import Currency
-from core.db import SessionLocal, engine, Base
+from monetra_server.models.currency import Currency
+from monetra_server.core.db import SessionLocal, engine, Base
 
 Base.metadata.create_all(bind=engine)
 

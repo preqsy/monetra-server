@@ -1,7 +1,7 @@
 from datetime import date
-from crud.summary import CRUDTotalSummary
-from services.account import AccountService
-from services.transaction import TransactionService
+from monetra_server.crud.summary import CRUDTotalSummary
+from monetra_server.services.account import AccountService
+from monetra_server.services.transaction import TransactionService
 
 
 class AccountSummaryService:

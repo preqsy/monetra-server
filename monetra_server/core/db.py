@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-from core.config import settings
+from monetra_server.core.config import settings
 
 # print("Database URL:", settings.DATABASE_URL)
 engine = create_engine(

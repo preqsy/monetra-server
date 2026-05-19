@@ -3,9 +3,9 @@ from decimal import Decimal
 from pydantic import BaseModel
 from typing import ClassVar, Optional
 
-from schemas.base import ReturnBaseModel
-from schemas.currency import UserCurrencyResponse
-from schemas.enums import (
+from monetra_server.schemas.base import ReturnBaseModel
+from monetra_server.schemas.currency import UserCurrencyResponse
+from monetra_server.schemas.enums import (
     AccountCategoryEnum,
     AccountMethodEnum,
     AccountProviderEnum,

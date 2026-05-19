@@ -1,10 +1,10 @@
 from typing import Optional
 from pydantic import BaseModel
 
-from schemas.base import ReturnBaseModel
-from schemas.enums import BudgetPeriodEnum, BudgetTypeEnum
-from schemas.currency import UserCurrencyResponse
-from schemas.category import CreateCategoryResponse
+from monetra_server.schemas.base import ReturnBaseModel
+from monetra_server.schemas.enums import BudgetPeriodEnum, BudgetTypeEnum
+from monetra_server.schemas.currency import UserCurrencyResponse
+from monetra_server.schemas.category import CreateCategoryResponse
 
 
 class BudgetCreate(BaseModel):

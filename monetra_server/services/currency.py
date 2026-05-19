@@ -1,13 +1,13 @@
 from typing import Tuple
 from arq import ArqRedis
 from tarsq import dispatch
-from core.exceptions import MissingResource, ResourceExists
-from crud.currency import (
+from monetra_server.core.exceptions import MissingResource, ResourceExists
+from monetra_server.crud.currency import (
     CRUDCurrency,
     CRUDUserCurrency,
 )
-from models.currency import UserCurrency
-from schemas.currency import UserCurrencyCreate, UserCurrencyUpdate
+from monetra_server.models.currency import UserCurrency
+from monetra_server.schemas.currency import UserCurrencyCreate, UserCurrencyUpdate
 
 
 class CurrencyService:

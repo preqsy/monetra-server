@@ -5,11 +5,11 @@ from dotenv import load_dotenv
 import logfire
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api import router
-from core.redis import close_redis, init_redis_client
-from services.kafka_producer import producer
-from core import settings
-from core.externals.firebase.firebase_init import init_firebase
+from monetra_server.api import router
+from monetra_server.core.redis import close_redis, init_redis_client
+from monetra_server.services.kafka_producer import producer
+from monetra_server.core import settings
+from monetra_server.core.externals.firebase.firebase_init import init_firebase
 
 load_dotenv()
 

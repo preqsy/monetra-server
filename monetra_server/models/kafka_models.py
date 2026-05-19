@@ -2,7 +2,7 @@ from datetime import date
 from typing import ClassVar
 from pydantic import BaseModel, Field, model_validator
 
-from schemas.enums import TransactionTypeEnum
+from monetra_server.schemas.enums import TransactionTypeEnum
 
 
 class TransactionDoc(BaseModel):

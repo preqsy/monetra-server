@@ -1,8 +1,8 @@
 from fastapi import Depends, APIRouter, Query, status
 
-from api.dependencies.authorization import get_current_user
-from api.dependencies.service import get_budget_service
-from schemas.budget import (
+from monetra_server.api.dependencies.authorization import get_current_user
+from monetra_server.api.dependencies.service import get_budget_service
+from monetra_server.schemas.budget import (
     BudgetCreate,
     BudgetResponse,
     BudgetWithAmountResponse,

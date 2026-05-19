@@ -1,8 +1,8 @@
 from typing import Optional
 from pydantic import BaseModel
 
-from schemas.base import ReturnBaseModel
-from schemas.enums import CategoryTypeEnum
+from monetra_server.schemas.base import ReturnBaseModel
+from monetra_server.schemas.enums import CategoryTypeEnum
 
 
 class CategoryBase(BaseModel):

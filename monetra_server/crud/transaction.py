@@ -1,12 +1,12 @@
 from datetime import datetime, date
-from core.db import get_db
-from crud.base import CRUDBase
-from models.currency import UserCurrency
-from models.transaction import Transaction
+from monetra_server.core.db import get_db
+from monetra_server.crud.base import CRUDBase
+from monetra_server.models.currency import UserCurrency
+from monetra_server.models.transaction import Transaction
 from sqlalchemy.orm import joinedload
 from sqlalchemy import extract
 
-from schemas.enums import AccountTypeEnum, TransactionTypeEnum
+from monetra_server.schemas.enums import AccountTypeEnum, TransactionTypeEnum
 
 
 class CRUDTransaction(CRUDBase[Transaction]):

@@ -3,7 +3,7 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import Enum
 
-from schemas.enums import TransactionTypeEnum
+from monetra_server.schemas.enums import TransactionTypeEnum
 
 
 IntentType = Literal["spent_total", "list_transaction", "unknown"]

@@ -4,8 +4,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from sqlalchemy.orm import Session
-from core.db import SessionLocal, engine, Base
-from models.user import SubscriptionPlan, PlanFeature
+from monetra_server.core.db import SessionLocal, engine, Base
+from monetra_server.models.user import SubscriptionPlan, PlanFeature
 import json
 
 Base.metadata.create_all(bind=engine)

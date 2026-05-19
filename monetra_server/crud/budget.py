@@ -1,12 +1,12 @@
 from typing import Optional
 from sqlalchemy.orm import joinedload
 
-from core.db import get_db
-from crud.base import CRUDBase
-from models.budget import Budget
+from monetra_server.core.db import get_db
+from monetra_server.crud.base import CRUDBase
+from monetra_server.models.budget import Budget
 
-from models.currency import UserCurrency
-from schemas.enums import BudgetPeriodEnum, BudgetTypeEnum
+from monetra_server.models.currency import UserCurrency
+from monetra_server.schemas.enums import BudgetPeriodEnum, BudgetTypeEnum
 
 
 class CRUDBudget(CRUDBase[Budget]):

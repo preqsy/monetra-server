@@ -1,11 +1,11 @@
 from datetime import date
 from fastapi import APIRouter, Depends
 
-from api.dependencies.authorization import get_current_user
-from api.dependencies.service import get_external_service
-from models.user import User
-from schemas.account import MonoAccountCreate
-from services.external import ExternalService
+from monetra_server.api.dependencies.authorization import get_current_user
+from monetra_server.api.dependencies.service import get_external_service
+from monetra_server.models.user import User
+from monetra_server.schemas.account import MonoAccountCreate
+from monetra_server.services.external import ExternalService
 
 router = APIRouter(prefix="", tags=["Plaid Mono"])
 

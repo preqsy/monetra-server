@@ -1,7 +1,7 @@
 from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, String, text
 from sqlalchemy.orm import relationship
 
-from core.db import Base
+from monetra_server.core.db import Base
 
 
 class Budget(Base):

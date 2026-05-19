@@ -1,20 +1,20 @@
 from datetime import date
 
 from arq import ArqRedis
-from core.exceptions import MissingResource, ResourceExists
-from core.externals.exchange_rate.exchangerate_api import get_exchange_rate
-from core.externals.mono.mono_client import MonoClient
-from core.externals.plaid.plaid_client import PlaidClient
-from crud.account import CRUDAccount
-from crud.currency import (
+from monetra_server.core.exceptions import MissingResource, ResourceExists
+from monetra_server.core.externals.exchange_rate.exchangerate_api import get_exchange_rate
+from monetra_server.core.externals.mono.mono_client import MonoClient
+from monetra_server.core.externals.plaid.plaid_client import PlaidClient
+from monetra_server.crud.account import CRUDAccount
+from monetra_server.crud.currency import (
     CRUDCurrency,
     CRUDUserCurrency,
 )
-from crud.user import CRUDAuthUser
-from models.user import User
-from schemas.account import MonoAccountCreate
-from schemas.currency import UserCurrencyCreate
-from utils.currency_conversion import from_minor_units
+from monetra_server.crud.user import CRUDAuthUser
+from monetra_server.models.user import User
+from monetra_server.schemas.account import MonoAccountCreate
+from monetra_server.schemas.currency import UserCurrencyCreate
+from monetra_server.utils.currency_conversion import from_minor_units
 
 
 class ExternalService:
@@ -123,7 +123,7 @@ class ExternalService:
         access_token,
         user_id: int,
     ):
-        from schemas.account import PlaidAccountCreate
+        from monetra_server.schemas.account import PlaidAccountCreate
 
         created_accounts = []
         for account in plaid_accounts_response.accounts:

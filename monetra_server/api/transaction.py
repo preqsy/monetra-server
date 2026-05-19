@@ -1,11 +1,11 @@
 from datetime import date
 from fastapi import APIRouter, Depends, Query, status
 
-from api.dependencies.authorization import get_current_user
-from api.dependencies.service import get_transaction_service
-from models.user import User
-from schemas.transaction import TransactionCreate, TransactionResponse
-from services.transaction import TransactionService
+from monetra_server.api.dependencies.authorization import get_current_user
+from monetra_server.api.dependencies.service import get_transaction_service
+from monetra_server.models.user import User
+from monetra_server.schemas.transaction import TransactionCreate, TransactionResponse
+from monetra_server.services.transaction import TransactionService
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 

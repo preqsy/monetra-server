@@ -2,9 +2,9 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel
 
-from schemas.category import UserCategoryResponse
-from schemas.currency import UserCurrencyResponse
-from schemas.subscription import UserSubscriptionResponse
+from monetra_server.schemas.category import UserCategoryResponse
+from monetra_server.schemas.currency import UserCurrencyResponse
+from monetra_server.schemas.subscription import UserSubscriptionResponse
 
 
 class RegisterPayload(BaseModel):

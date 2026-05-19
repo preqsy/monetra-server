@@ -7,16 +7,16 @@ from httpx import AsyncClient, HTTPError
 import logfire
 from redis import Redis
 
-from core.exceptions import InvalidRequest, MissingResource
-from crud.chat import CRUDChat, CRUDSession
-from crud.currency import CRUDUserCurrency
-from crud.transaction import CRUDTransaction
-from schemas.ai_schemas import Interpretation, NLResolveResult
-from schemas.chat import ChatMessageCreate, SessionChatCreate
-from schemas.enums import ChatRoleEnum
-from utils.currency_conversion import from_minor_units
-from utils.helper import convert_sql_models_to_dict, serialize_transaction_dates
-from core import settings
+from monetra_server.core.exceptions import InvalidRequest, MissingResource
+from monetra_server.crud.chat import CRUDChat, CRUDSession
+from monetra_server.crud.currency import CRUDUserCurrency
+from monetra_server.crud.transaction import CRUDTransaction
+from monetra_server.schemas.ai_schemas import Interpretation, NLResolveResult
+from monetra_server.schemas.chat import ChatMessageCreate, SessionChatCreate
+from monetra_server.schemas.enums import ChatRoleEnum
+from monetra_server.utils.currency_conversion import from_minor_units
+from monetra_server.utils.helper import convert_sql_models_to_dict, serialize_transaction_dates
+from monetra_server.core import settings
 
 
 class AIInsightService:

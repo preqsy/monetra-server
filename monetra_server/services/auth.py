@@ -1,18 +1,18 @@
 from arq import ArqRedis
-from crud.currency import (
+from monetra_server.crud.currency import (
     CRUDCurrency,
     CRUDUserCurrency,
 )
-from crud.user import CRUDAuthUser
+from monetra_server.crud.user import CRUDAuthUser
 from fastapi import HTTPException, status, Request
 
 from firebase_admin import auth as firebase_auth
 
-from core.exceptions import ResourceExists
-from core.externals.mono.mono_client import MonoClient
-from crud.account import CRUDAccount
-from crud.user import CRUDAuthUser
-from schemas.user import Payload, RegisterCreate, RegisterPayload
+from monetra_server.core.exceptions import ResourceExists
+from monetra_server.core.externals.mono.mono_client import MonoClient
+from monetra_server.crud.account import CRUDAccount
+from monetra_server.crud.user import CRUDAuthUser
+from monetra_server.schemas.user import Payload, RegisterCreate, RegisterPayload
 from tarsq import dispatch, status
 
 

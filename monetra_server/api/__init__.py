@@ -34,6 +34,6 @@ router.include_router(ai_insight_router)
 
 @router.on_event("startup")
 async def startup_event():
-    from crud.category import crud_category
+    from monetra_server.crud.category import crud_category
 
     crud_category.add_default_categories()

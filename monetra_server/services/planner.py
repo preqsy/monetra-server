@@ -1,22 +1,22 @@
 from decimal import Decimal
 from sqlalchemy import Column
-from core.exceptions import MissingResource
-from crud.category import (
+from monetra_server.core.exceptions import MissingResource
+from monetra_server.crud.category import (
     CRUDCategory,
     CRUDUserCategory,
 )
-from crud.currency import CRUDUserCurrency
-from crud.planner import CRUDPlanner
-from schemas.category import CategoryCreate
-from schemas.enums import PlannerTypeEnum, TransactionTypeEnum
-from schemas.planner import PlannerAmountUpdate, PlannerCreate, PlannerUpdate
-from schemas.transaction import TransactionCreate
-from services.account import AccountService
-from services.category import CategoryService
-from services.currency import CurrencyService
-from services.transaction import TransactionService
-from utils.currency_conversion import to_minor_units
-from utils.helper import convert_sql_models_to_dict
+from monetra_server.crud.currency import CRUDUserCurrency
+from monetra_server.crud.planner import CRUDPlanner
+from monetra_server.schemas.category import CategoryCreate
+from monetra_server.schemas.enums import PlannerTypeEnum, TransactionTypeEnum
+from monetra_server.schemas.planner import PlannerAmountUpdate, PlannerCreate, PlannerUpdate
+from monetra_server.schemas.transaction import TransactionCreate
+from monetra_server.services.account import AccountService
+from monetra_server.services.category import CategoryService
+from monetra_server.services.currency import CurrencyService
+from monetra_server.services.transaction import TransactionService
+from monetra_server.utils.currency_conversion import to_minor_units
+from monetra_server.utils.helper import convert_sql_models_to_dict
 
 
 class PlannerService:

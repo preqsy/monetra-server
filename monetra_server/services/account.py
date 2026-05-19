@@ -1,16 +1,16 @@
 from decimal import ROUND_HALF_UP, Decimal
 from sqlalchemy import Column
-from core.exceptions import MissingResource
-from crud.account import CRUDAccount
-from crud.currency import (
+from monetra_server.core.exceptions import MissingResource
+from monetra_server.crud.account import CRUDAccount
+from monetra_server.crud.currency import (
     CRUDCurrency,
     CRUDUserCurrency,
 )
-from models.account import Account
-from schemas.account import AccountCreate
-from schemas.enums import AccountCategoryEnum, AccountTypeEnum
-from utils.currency_conversion import to_minor_units
-from utils.helper import convert_sql_models_to_dict, extract_beneficiary
+from monetra_server.models.account import Account
+from monetra_server.schemas.account import AccountCreate
+from monetra_server.schemas.enums import AccountCategoryEnum, AccountTypeEnum
+from monetra_server.utils.currency_conversion import to_minor_units
+from monetra_server.utils.helper import convert_sql_models_to_dict, extract_beneficiary
 
 
 class AccountService:

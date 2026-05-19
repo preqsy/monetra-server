@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from pydantic import BaseModel
 
-from schemas.base import ReturnBaseModel
+from monetra_server.schemas.base import ReturnBaseModel
 
 
 class UserSubscriptionCreate(BaseModel):

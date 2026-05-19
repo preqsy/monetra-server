@@ -3,7 +3,7 @@ import threading
 from confluent_kafka import Producer
 import json
 from confluent_kafka import Producer
-from core import settings
+from monetra_server.core import settings
 from base64 import b64decode
 
 import logfire

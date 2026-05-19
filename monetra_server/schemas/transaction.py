@@ -3,11 +3,11 @@ from pydantic import AnyHttpUrl, BaseModel
 from typing import Optional
 from datetime import datetime
 
-from schemas.account import AccountResponse
-from schemas.base import ReturnBaseModel
-from schemas.category import CreateCategoryResponse
-from schemas.currency import UserCurrencyResponse
-from schemas.enums import TransactionTypeEnum
+from monetra_server.schemas.account import AccountResponse
+from monetra_server.schemas.base import ReturnBaseModel
+from monetra_server.schemas.category import CreateCategoryResponse
+from monetra_server.schemas.currency import UserCurrencyResponse
+from monetra_server.schemas.enums import TransactionTypeEnum
 
 
 class TransactionBase(BaseModel):

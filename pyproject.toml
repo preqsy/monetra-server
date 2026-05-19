@@ -3,7 +3,7 @@ name = "monetra-server"
 version = "0.1.0"
 description = ""
 authors = ["preqsy <obbyprecious24@gmail.com>"]
-packages = [{include = "api"}, {include = "core"}, {include = "crud"}, {include = "models"}, {include = "schemas"}, {include = "services"}, {include = "task_queue"}, {include = "utils"}]
+packages = [{include = "monetra_server"}]
 
 [tool.poetry.dependencies]
 python = "^3.12.3"

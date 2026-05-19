@@ -1,10 +1,10 @@
 from datetime import date
 from fastapi import Depends, APIRouter, Query
-from api.dependencies.authorization import get_current_user
-from models.user import User
-from schemas.summary import SummaryResponse
-from services import AccountSummaryService
-from api.dependencies.service import get_account_summary_service
+from monetra_server.api.dependencies.authorization import get_current_user
+from monetra_server.models.user import User
+from monetra_server.schemas.summary import SummaryResponse
+from monetra_server.services import AccountSummaryService
+from monetra_server.api.dependencies.service import get_account_summary_service
 
 
 router = APIRouter(prefix="/summary", tags=["Summary"])

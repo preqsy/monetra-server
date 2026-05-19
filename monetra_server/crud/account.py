@@ -1,9 +1,9 @@
 from typing import Optional
-from core.db import get_db
-from crud.base import CRUDBase
-from models.account import Account
-from models.currency import UserCurrency
-from schemas.enums import AccountTypeEnum
+from monetra_server.core.db import get_db
+from monetra_server.crud.base import CRUDBase
+from monetra_server.models.account import Account
+from monetra_server.models.currency import UserCurrency
+from monetra_server.schemas.enums import AccountTypeEnum
 from sqlalchemy.orm import joinedload
 
 

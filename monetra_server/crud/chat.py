@@ -1,8 +1,8 @@
-from core.db import get_db
-from crud.base import CRUDBase
-from models.chat import ChatMessage, Session
-from schemas.chat import ChatMessageCreate
-from schemas.enums import ChatRoleEnum
+from monetra_server.core.db import get_db
+from monetra_server.crud.base import CRUDBase
+from monetra_server.models.chat import ChatMessage, Session
+from monetra_server.schemas.chat import ChatMessageCreate
+from monetra_server.schemas.enums import ChatRoleEnum
 
 
 class CRUDChat(CRUDBase[ChatMessage,]):

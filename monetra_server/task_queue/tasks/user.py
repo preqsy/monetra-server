@@ -2,8 +2,8 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from tarsq import task
-from crud.account import CRUDAccount
-from crud.user import CRUDAuthUser
+from monetra_server.crud.account import CRUDAccount
+from monetra_server.crud.user import CRUDAuthUser
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 @task("update_user_last_activity")
 async def update_user_last_activity(ctx, payload: dict):
 
-    from task_queue.main import get_queue_connection
+    from monetra_server.task_queue.main import get_queue_connection
 
     user_id = payload["user_id"]
 

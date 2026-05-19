@@ -1,5 +1,5 @@
 from datetime import date
-from core.externals.mono.mono_client import get_mono_client
+from monetra_server.core.externals.mono.mono_client import get_mono_client
 
 
 # TODO: Rename this function
@@ -10,7 +10,7 @@ async def retrieve_user_mono_transactions(
     account_id: int,
     start_date: date = None,
 ) -> None:
-    from api.dependencies.service import get_transaction_service
+    from monetra_server.api.dependencies.service import get_transaction_service
 
     mono_client = get_mono_client()
     transaction_service = get_transaction_service(

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, status
 
-from api.dependencies.authorization import get_current_user
-from api.dependencies.service import get_transaction_rule_service
-from models.user import User
-from schemas.rules import RuleCreate, RuleResponse
-from services.rules import TransactionRuleService
+from monetra_server.api.dependencies.authorization import get_current_user
+from monetra_server.api.dependencies.service import get_transaction_rule_service
+from monetra_server.models.user import User
+from monetra_server.schemas.rules import RuleCreate, RuleResponse
+from monetra_server.services.rules import TransactionRuleService
 
 router = APIRouter(prefix="/rules", tags=["Rules"])
 

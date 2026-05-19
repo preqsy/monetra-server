@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel
 from decimal import Decimal
 
-from schemas.base import ReturnBaseModel
+from monetra_server.schemas.base import ReturnBaseModel
 
 
 class UserCurrencyCreate(BaseModel):

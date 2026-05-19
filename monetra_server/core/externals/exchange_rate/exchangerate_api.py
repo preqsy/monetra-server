@@ -1,7 +1,7 @@
 from httpx import AsyncClient
 
-from core import settings
-from core.exceptions import InvalidRequest
+from monetra_server.core import settings
+from monetra_server.core.exceptions import InvalidRequest
 
 
 class ExchangeRateClient:

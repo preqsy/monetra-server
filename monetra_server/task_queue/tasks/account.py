@@ -1,12 +1,12 @@
-from core.exceptions import MissingResource
-from crud.account import CRUDAccount
-from crud.currency import (
+from monetra_server.core.exceptions import MissingResource
+from monetra_server.crud.account import CRUDAccount
+from monetra_server.crud.currency import (
     CRUDCurrency,
     CRUDUserCurrency,
 )
-from schemas.account import AccountCreate
-from schemas.currency import UserCurrencyCreate
-from schemas.enums import AccountCategoryEnum, AccountCategoryEnum, AccountTypeEnum
+from monetra_server.schemas.account import AccountCreate
+from monetra_server.schemas.currency import UserCurrencyCreate
+from monetra_server.schemas.enums import AccountCategoryEnum, AccountCategoryEnum, AccountTypeEnum
 
 from tarsq import dispatch, task
 

@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, status, Request
 
 
-from api.dependencies.authorization import get_current_user
-from api.dependencies.service import get_auth_service
-from models.user import User
-from schemas.user import RegisterPayload, RegisterResponse
-from services import AuthService
+from monetra_server.api.dependencies.authorization import get_current_user
+from monetra_server.api.dependencies.service import get_auth_service
+from monetra_server.models.user import User
+from monetra_server.schemas.user import RegisterPayload, RegisterResponse
+from monetra_server.services import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

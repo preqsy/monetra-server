@@ -9,7 +9,7 @@ from . import (
     budget,
     chat,
 )
-from core.db import engine
+from monetra_server.core.db import engine
 
 
 # user.Base.metadata.create_all(bind=engine)

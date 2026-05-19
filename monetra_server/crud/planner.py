@@ -1,9 +1,9 @@
 from sqlalchemy import Column
 from sqlalchemy.orm import joinedload
-from core.db import get_db
-from crud.base import CRUDBase
-from models.currency import UserCurrency
-from models.planner import Planner
+from monetra_server.core.db import get_db
+from monetra_server.crud.base import CRUDBase
+from monetra_server.models.currency import UserCurrency
+from monetra_server.models.planner import Planner
 
 
 class CRUDPlanner(CRUDBase[Planner]):

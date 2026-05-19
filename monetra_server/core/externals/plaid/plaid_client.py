@@ -1,8 +1,8 @@
 import httpx
 from datetime import datetime, timedelta
-from core.config import settings
-from core.exceptions import InvalidRequest
-from core.externals.schema import (
+from monetra_server.core.config import settings
+from monetra_server.core.exceptions import InvalidRequest
+from monetra_server.core.externals.schema import (
     PlaidAccountResponse,
     PlaidExchangeTokenResponse,
     PlaidRequestTokenResponse,

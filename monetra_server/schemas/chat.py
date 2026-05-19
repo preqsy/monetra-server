@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel
-from schemas.base import ReturnBaseModel
-from schemas.enums import ChatRoleEnum
+from monetra_server.schemas.base import ReturnBaseModel
+from monetra_server.schemas.enums import ChatRoleEnum
 
 
 class ChatMessageCreate(BaseModel):

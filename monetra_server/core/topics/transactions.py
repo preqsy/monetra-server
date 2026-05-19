@@ -1,4 +1,4 @@
-from core import settings
+from monetra_server.core import settings
 
 TRANSACTION_CREATED = (
     "transaction.created.dev"

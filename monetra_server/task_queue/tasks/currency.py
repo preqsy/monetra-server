@@ -1,10 +1,10 @@
 from tarsq import task
 
-from core.exceptions import MissingResource
-from crud.currency import CRUDCurrency, CRUDUserCurrency
-from schemas.currency import UserCurrencyUpdate
-from utils.currency_conversion import change_default_currency
-from utils.helper import convert_sql_models_to_dict
+from monetra_server.core.exceptions import MissingResource
+from monetra_server.crud.currency import CRUDCurrency, CRUDUserCurrency
+from monetra_server.schemas.currency import UserCurrencyUpdate
+from monetra_server.utils.currency_conversion import change_default_currency
+from monetra_server.utils.helper import convert_sql_models_to_dict
 
 
 @task("update_currencies_exchange_rate")

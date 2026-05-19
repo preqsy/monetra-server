@@ -1,10 +1,10 @@
 from sqlalchemy.orm import joinedload
 
-from core.db import get_db
-from crud.base import CRUDBase
-from models.category import Category, UserCategory
-from schemas.category import DefaultCategoryCreate
-from utils.helper import get_default_categories
+from monetra_server.core.db import get_db
+from monetra_server.crud.base import CRUDBase
+from monetra_server.models.category import Category, UserCategory
+from monetra_server.schemas.category import DefaultCategoryCreate
+from monetra_server.utils.helper import get_default_categories
 
 
 class CRUDCategory(CRUDBase[Category]):

@@ -1,6 +1,6 @@
 from tarsq import task
 
-from crud.category import CRUDCategory, CRUDUserCategory
+from monetra_server.crud.category import CRUDCategory, CRUDUserCategory
 
 
 @task("add_user_default_categories")

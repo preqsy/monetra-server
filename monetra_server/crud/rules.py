@@ -1,6 +1,6 @@
-from core.db import get_db
-from crud.base import CRUDBase
-from models.rules import TransactionRule
+from monetra_server.core.db import get_db
+from monetra_server.crud.base import CRUDBase
+from monetra_server.models.rules import TransactionRule
 
 
 class CRUDRules(CRUDBase[TransactionRule]):

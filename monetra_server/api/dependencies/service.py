@@ -1,25 +1,25 @@
-from core.externals.mono.mono_client import get_mono_client
-from core.externals.plaid.plaid_client import get_plaid_client
-from core.redis import get_redis_client
-from crud.account import get_crud_account
+from monetra_server.core.externals.mono.mono_client import get_mono_client
+from monetra_server.core.externals.plaid.plaid_client import get_plaid_client
+from monetra_server.core.redis import get_redis_client
+from monetra_server.crud.account import get_crud_account
 from fastapi.params import Depends
-from crud.budget import get_crud_budget
-from crud.category import (
+from monetra_server.crud.budget import get_crud_budget
+from monetra_server.crud.category import (
     get_crud_category,
     get_crud_user_category,
 )
-from crud.chat import get_crud_chat, get_crud_session
-from crud.currency import (
+from monetra_server.crud.chat import get_crud_chat, get_crud_session
+from monetra_server.crud.currency import (
     get_crud_currency,
     get_crud_user_currency,
 )
-from crud.planner import get_crud_planner
-from crud.rules import get_crud_rules
-from crud.subscription import get_crud_subscription_plan, get_crud_user_subscription
-from crud.summary import get_crud_total_summary
-from crud.transaction import get_crud_transaction
-from crud.user import get_crud_auth_user
-from services import (
+from monetra_server.crud.planner import get_crud_planner
+from monetra_server.crud.rules import get_crud_rules
+from monetra_server.crud.subscription import get_crud_subscription_plan, get_crud_user_subscription
+from monetra_server.crud.summary import get_crud_total_summary
+from monetra_server.crud.transaction import get_crud_transaction
+from monetra_server.crud.user import get_crud_auth_user
+from monetra_server.services import (
     PlannerService,
     TransactionService,
     AccountService,
@@ -33,8 +33,8 @@ from services import (
     BudgetService,
 )
 
-from services.ai_insight import AIInsightService
-from task_queue.main import get_queue_connection
+from monetra_server.services.ai_insight import AIInsightService
+from monetra_server.task_queue.main import get_queue_connection
 
 
 def get_account_service(

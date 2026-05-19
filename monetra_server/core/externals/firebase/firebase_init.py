@@ -1,7 +1,7 @@
 import os
 import firebase_admin
 from firebase_admin import credentials
-from core import settings
+from monetra_server.core import settings
 import json, base64
 
 firebase_str = base64.b64decode(settings.FIREBASE_SERVICE_ACCOUNT_JSON).decode("utf-8")

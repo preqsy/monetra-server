@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from core.externals.exchange_rate.exchangerate_api import (
+from monetra_server.core.externals.exchange_rate.exchangerate_api import (
     get_exchange_rate,
 )
 

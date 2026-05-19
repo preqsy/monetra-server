@@ -3,11 +3,11 @@ from decimal import Decimal
 from pydantic import AnyHttpUrl, BaseModel, Field
 from typing import ClassVar, Optional
 
-from schemas.base import ReturnBaseModel
-from schemas.category import CreateCategoryResponse
-from schemas.currency import UserCurrencyResponse
-from schemas.enums import PlannerRoleEnum, PlannerTypeEnum
-from schemas.transaction import TransactionResponse
+from monetra_server.schemas.base import ReturnBaseModel
+from monetra_server.schemas.category import CreateCategoryResponse
+from monetra_server.schemas.currency import UserCurrencyResponse
+from monetra_server.schemas.enums import PlannerRoleEnum, PlannerTypeEnum
+from monetra_server.schemas.transaction import TransactionResponse
 
 
 class PlannerBase(BaseModel):

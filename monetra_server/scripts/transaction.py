@@ -7,19 +7,19 @@ import random
 
 from tarsq import schedule, task
 
-from core.externals.mono.mono_client import get_mono_client
-from crud.account import CRUDAccount, get_crud_account
-from crud.category import CRUDCategory, CRUDUserCategory, get_crud_user_category
-from crud.currency import CRUDCurrency, CRUDUserCurrency
-from crud.rules import CRUDRules
-from crud.transaction import CRUDTransaction
-from crud.user import CRUDAuthUser
-from schemas.enums import AccountTypeEnum, TransactionTypeEnum
-from schemas.transaction import TransactionCreate
-from services.account import AccountService
-from services.category import CategoryService
-from services.currency import CurrencyService
-from services.transaction import TransactionService
+from monetra_server.core.externals.mono.mono_client import get_mono_client
+from monetra_server.crud.account import CRUDAccount, get_crud_account
+from monetra_server.crud.category import CRUDCategory, CRUDUserCategory, get_crud_user_category
+from monetra_server.crud.currency import CRUDCurrency, CRUDUserCurrency
+from monetra_server.crud.rules import CRUDRules
+from monetra_server.crud.transaction import CRUDTransaction
+from monetra_server.crud.user import CRUDAuthUser
+from monetra_server.schemas.enums import AccountTypeEnum, TransactionTypeEnum
+from monetra_server.schemas.transaction import TransactionCreate
+from monetra_server.services.account import AccountService
+from monetra_server.services.category import CategoryService
+from monetra_server.services.currency import CurrencyService
+from monetra_server.services.transaction import TransactionService
 
 SAMPLE_TRANSACTIONS = [
     {

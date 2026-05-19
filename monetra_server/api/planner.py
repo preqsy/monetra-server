@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Query, status
-from api.dependencies.authorization import get_current_user
-from api.dependencies.service import get_planner_service
-from models.user import User
-from schemas.enums import PlannerTypeEnum
-from schemas.planner import (
+from monetra_server.api.dependencies.authorization import get_current_user
+from monetra_server.api.dependencies.service import get_planner_service
+from monetra_server.models.user import User
+from monetra_server.schemas.enums import PlannerTypeEnum
+from monetra_server.schemas.planner import (
     PlannerAmountUpdate,
     PlannerCreate,
     PlannerCreateResponse,
@@ -11,7 +11,7 @@ from schemas.planner import (
     PlannerUpdate,
     PlannerWithTransactionsResponse,
 )
-from services import PlannerService
+from monetra_server.services import PlannerService
 
 
 router = APIRouter(prefix="/planner", tags=["Planner"])

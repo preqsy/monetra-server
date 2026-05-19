@@ -1,10 +1,10 @@
 from typing import List, Optional
-from core.db import get_db
-from crud.base import CRUDBase
-from models.currency import Currency, UserCurrency
+from monetra_server.core.db import get_db
+from monetra_server.crud.base import CRUDBase
+from monetra_server.models.currency import Currency, UserCurrency
 from sqlalchemy.orm import joinedload
 
-from schemas.currency import UserCurrencyUpdate
+from monetra_server.schemas.currency import UserCurrencyUpdate
 
 
 class CRUDCurrency(CRUDBase):

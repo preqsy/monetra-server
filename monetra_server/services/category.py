@@ -1,11 +1,11 @@
 from sqlalchemy import Column
-from core.exceptions import MissingResource, ResourceExists
-from crud.category import (
+from monetra_server.core.exceptions import MissingResource, ResourceExists
+from monetra_server.crud.category import (
     CRUDCategory,
     CRUDUserCategory,
 )
-from models.category import UserCategory
-from schemas.category import CategoryCreate, UserCategoryCreate, UserCategoryUpdate
+from monetra_server.models.category import UserCategory
+from monetra_server.schemas.category import CategoryCreate, UserCategoryCreate, UserCategoryUpdate
 
 
 class CategoryService:

@@ -1,7 +1,7 @@
 from datetime import date
-from core.db import get_db
-from crud.base import CRUDBase
-from models.views import TotalSummary
+from monetra_server.core.db import get_db
+from monetra_server.crud.base import CRUDBase
+from monetra_server.models.views import TotalSummary
 
 
 class CRUDTotalSummary(CRUDBase[TotalSummary]):

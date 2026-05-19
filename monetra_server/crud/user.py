@@ -1,10 +1,10 @@
 from typing import Optional
 from sqlalchemy.orm import joinedload
-from core.db import get_db
-from crud.base import CRUDBase
-from models.category import UserCategory
-from models.currency import UserCurrency
-from models.user import User
+from monetra_server.core.db import get_db
+from monetra_server.crud.base import CRUDBase
+from monetra_server.models.category import UserCategory
+from monetra_server.models.currency import UserCurrency
+from monetra_server.models.user import User
 
 
 class CRUDAuthUser(CRUDBase[User]):

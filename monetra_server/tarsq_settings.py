@@ -1,9 +1,9 @@
-from crud.account import get_crud_account
-from crud.category import get_crud_category, get_crud_user_category
-from crud.currency import get_crud_currency, get_crud_user_currency
-from crud.rules import get_crud_rules
-from crud.transaction import get_crud_transaction
-from crud.user import get_crud_auth_user
+from monetra_server.crud.account import get_crud_account
+from monetra_server.crud.category import get_crud_category, get_crud_user_category
+from monetra_server.crud.currency import get_crud_currency, get_crud_user_currency
+from monetra_server.crud.rules import get_crud_rules
+from monetra_server.crud.transaction import get_crud_transaction
+from monetra_server.crud.user import get_crud_auth_user
 from tarsq import WorkerSettings
 
 
@@ -19,7 +19,7 @@ def startup(ctx):
 
 
 class TarsqSettings(WorkerSettings):
-    app: str = "task_queue.tasks"
+    app: str = "monetra_server.task_queue.tasks"
     workers: int = 3
     timeout: int = 300
     on_startup = startup

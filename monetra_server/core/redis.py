@@ -1,6 +1,6 @@
 import logfire
 from redis import Redis
-from core.config import settings
+from monetra_server.core.config import settings
 
 redis_client = Redis(
     host=settings.REDIS_HOST,

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Integer, Numeric, Date, BigInteger
 from sqlalchemy.orm import declarative_base
-from core.db import Base
+from monetra_server.core.db import Base
 
 
 class AccountSummary(Base):

@@ -2,7 +2,7 @@ from typing import Type, TypeVar, Generic
 
 from pydantic import BaseModel
 
-from core.db import get_db, Base
+from monetra_server.core.db import get_db, Base
 from sqlalchemy.orm import Session
 
 ModelType = TypeVar("ModelType", bound=Base)

@@ -2,10 +2,10 @@ from datetime import date
 from httpx import AsyncClient
 
 from dateutil.relativedelta import relativedelta
-from core import settings
-from core.exceptions import InvalidRequest
-from core.externals.schema import MonoTransactionSchema
-from schemas.account import MonoAccountResponse
+from monetra_server.core import settings
+from monetra_server.core.exceptions import InvalidRequest
+from monetra_server.core.externals.schema import MonoTransactionSchema
+from monetra_server.schemas.account import MonoAccountResponse
 
 
 class MonoClient:
