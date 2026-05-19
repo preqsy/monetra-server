@@ -8,8 +8,11 @@ import random
 from tarsq import schedule, task
 
 from monetra_server.core.externals.mono.mono_client import get_mono_client
-from monetra_server.crud.account import CRUDAccount, get_crud_account
-from monetra_server.crud.category import CRUDCategory, CRUDUserCategory, get_crud_user_category
+from monetra_server.crud.account import CRUDAccount
+from monetra_server.crud.category import (
+    CRUDCategory,
+    CRUDUserCategory,
+)
 from monetra_server.crud.currency import CRUDCurrency, CRUDUserCurrency
 from monetra_server.crud.rules import CRUDRules
 from monetra_server.crud.transaction import CRUDTransaction
@@ -60,7 +63,7 @@ SAMPLE_TRANSACTIONS = [
 ]
 
 
-@schedule("create_sample_transactions", cron="every 5 minutes")
+@schedule("create_sample_transactions", cron="every minute")
 @task("create_sample_transactions", max_retries=2)
 async def create_sample_transactions(ctx, payload: dict = None):
     crud_user: CRUDAuthUser = ctx["crud_user"]()
@@ -72,7 +75,7 @@ async def create_sample_transactions(ctx, payload: dict = None):
     crud_transaction: CRUDTransaction = ctx["crud_transaction"]()
     crud_rules: CRUDRules = ctx["crud_rules"]()
 
-    user = crud_user.get(id=65)
+    user = crud_user.get_by_email(email="test@gmail.com")
     if not user:
         return
 
