@@ -19,7 +19,7 @@ def startup(ctx):
 
 
 class TarsqSettings(WorkerSettings):
-    app: str = "task_queue.tasks.account"
+    app: str = "task_queue.tasks"
     workers: int = 3
     timeout: int = 300
     on_startup = startup

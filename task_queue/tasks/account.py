@@ -8,10 +8,9 @@ from schemas.account import AccountCreate
 from schemas.currency import UserCurrencyCreate
 from schemas.enums import AccountCategoryEnum, AccountCategoryEnum, AccountTypeEnum
 
-from tarsq import dispatch, task, schedule
+from tarsq import dispatch, task
 
 
-@schedule("initialize_user_data", cron="every minute")
 @task("initialize_user_data", max_retries=3)
 def add_default_currency(ctx, payload: dict):
     user_id = payload["user_id"]
