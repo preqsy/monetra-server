@@ -4,6 +4,7 @@ from crud.currency import get_crud_currency, get_crud_user_currency
 from crud.rules import get_crud_rules
 from crud.transaction import get_crud_transaction
 from crud.user import get_crud_auth_user
+from tarsq import WorkerSettings
 
 
 def startup(ctx):
@@ -17,7 +18,7 @@ def startup(ctx):
     ctx["crud_user"] = get_crud_auth_user
 
 
-class WorkerSettings:
+class TarsqSettings(WorkerSettings):
     app: str = "task_queue.tasks.account"
     workers: int = 3
     timeout: int = 300
